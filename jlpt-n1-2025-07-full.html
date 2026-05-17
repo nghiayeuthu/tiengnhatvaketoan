@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=4" />
   </head>
   <body>
     <header class="topbar">
@@ -62,11 +62,12 @@
           <p class="eyebrow">Practice</p>
           <h2>Luyện câu hỏi N1</h2>
           <div class="filters" role="group" aria-label="Chọn kỹ năng">
-            <button class="filter active" type="button" data-filter="all">Tất cả</button>
             <button class="filter" type="button" data-filter="vocab">Từ vựng</button>
             <button class="filter" type="button" data-filter="grammar">Ngữ pháp</button>
           </div>
         </div>
+
+        <button class="side-back-button" id="folderBackFilter" type="button" aria-label="Quay lại thư mục đề" title="Quay lại thư mục đề" hidden>←</button>
 
         <article class="quiz-shell">
           <div class="quiz-top">
@@ -104,6 +105,7 @@
 
     <script src="n1-vocabulary-extra.js?v=4"></script>
     <script src="n1-grammar-extra.js?v=1"></script>
-    <script src="script-dynamic-all-exams-v12.js?v=48"></script>
+    <script src="exam-data-bundle.js?v=1"></script>
+    <script src="script-dynamic-all-exams-v12.js?v=51"></script>
   </body>
 </html>

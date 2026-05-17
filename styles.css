@@ -337,6 +337,36 @@ h1 {
   gap: 8px;
 }
 
+.side-back-button {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  z-index: 9;
+  display: grid;
+  width: 48px;
+  height: 72px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-left: 0;
+  border-radius: 0 8px 8px 0;
+  color: var(--green-dark);
+  background: var(--white);
+  box-shadow: 0 10px 24px rgba(23, 33, 31, 0.12);
+  font-size: 22px;
+  font-weight: 900;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.side-back-button:hover {
+  color: white;
+  background: var(--green);
+}
+
+.side-back-button[hidden] {
+  display: none;
+}
+
 .filter.active {
   color: white;
   background: var(--green);
@@ -701,6 +731,7 @@ h1 {
 
 @media (max-width: 840px) {
   .topbar {
+    position: static;
     align-items: stretch;
     flex-direction: column;
   }
@@ -731,8 +762,16 @@ h1 {
   }
 
   .quiz-top {
-    top: 136px;
+    top: 0;
     flex-direction: column;
+  }
+
+  .side-back-button {
+    top: auto;
+    bottom: 24px;
+    width: 44px;
+    height: 58px;
+    transform: none;
   }
 
   .passage {

@@ -66,9 +66,9 @@ function skillFromLabel(label) {
 
 const examDataVersion = 5;
 const remoteExams = [
+  { path: "exam-202512.json", id: "exam-2025-12", title: "2025 tháng 12" },
   { path: "exam-202507.json", id: "exam-2025-07", title: "2025 tháng 7" },
   { path: "exam-202412.json", id: "exam-2024-12", title: "2024 tháng 12" },
-  { path: "exam-202512.json", id: "exam-2025-12", title: "2025 tháng 12" },
   { path: "exam-202407.json", id: "exam-2024-07", title: "2024 tháng 7" },
   { path: "exam-202312.json", id: "exam-2023-12", title: "2023 tháng 12" },
   { path: "exam-202307.json", id: "exam-2023-07", title: "2023 tháng 7" },
@@ -356,7 +356,8 @@ const questionJump = document.querySelector("#questionJump");
 const nextButton = document.querySelector("#nextQuestion");
 const prevButton = document.querySelector("#prevQuestion");
 const backToFoldersButton = document.querySelector("#backToFolders");
-const filters = document.querySelectorAll(".filter");
+const filters = document.querySelectorAll(".filter[data-filter]");
+const folderBackFilter = document.querySelector("#folderBackFilter");
 const deckGrid = document.querySelector("#deckGrid");
 const quizShell = document.querySelector(".quiz-shell");
 const appViews = document.querySelectorAll(".app-view");
@@ -2430,6 +2431,7 @@ function renderQuestion() {
     return;
   }
 
+  if (folderBackFilter) folderBackFilter.hidden = false;
   prevButton.hidden = false;
   nextButton.hidden = false;
   backToFoldersButton.hidden = false;
@@ -2476,6 +2478,7 @@ function renderQuestion() {
 }
 
 function renderFolderDirectory() {
+  if (folderBackFilter) folderBackFilter.hidden = true;
   prevButton.hidden = true;
   nextButton.hidden = true;
   backToFoldersButton.hidden = true;
@@ -2859,6 +2862,8 @@ function moveDeck(direction) {
 filters.forEach((button) => {
   button.addEventListener("click", () => setFilter(button.dataset.filter));
 });
+
+folderBackFilter?.addEventListener("click", () => setFilter("all"));
 
 navLinks.forEach((link) => {
   link.addEventListener("click", () => {
