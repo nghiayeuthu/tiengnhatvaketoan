@@ -816,7 +816,7 @@ const supplementalVocabAnswers = [
   ["目覚ましい", "めざましい", "nổi bật, đáng chú ý"],
   ["ほどける", "ほどける", "tháo ra, bung ra"],
   ["互角", "ごかく", "ngang sức, ngang tài ngang sức"],
-  ["リード", "リード", "dẫn trước, dẫn đầu; vai trò dẫn dắt"],
+  ["リード", "リード", "dẫn trước, dẫn đầu; 1点リードする = dẫn trước 1 điểm; vai trò dẫn dắt"],
   ["人脈", "じんみゃく", "mạng lưới quan hệ, mối quan hệ xã hội"],
   ["賢い", "かしこい", "thông minh, khôn ngoan"],
   ["顕著", "けんちょ", "rõ rệt, nổi bật, dễ thấy"],
@@ -825,6 +825,39 @@ const supplementalVocabAnswers = [
   ["廃れる", "すたれる", "mai một, lỗi thời, không còn thịnh hành"],
   ["相場", "そうば", "giá thị trường, mức giá chung"],
   ["要望", "ようぼう", "yêu cầu, nguyện vọng, điều mong muốn được đáp ứng"],
+  ["運用", "うんよう", "vận dụng, vận hành; 運用する = đưa hệ thống/quy tắc/tiền vốn vào sử dụng thực tế"],
+  ["迫力", "はくりょく", "sức mạnh gây ấn tượng, độ cuốn hút mạnh; 迫力がある = rất ấn tượng, có lực"],
+  ["目まぐるしい", "めまぐるしい", "thay đổi nhanh đến chóng mặt, dồn dập"],
+  ["改修", "かいしゅう", "sửa chữa, cải tạo công trình/hệ thống cho tốt hơn"],
+  ["手厚い", "てあつい", "chu đáo, đầy đủ, tận tình; 手厚い支援 = hỗ trợ chu đáo"],
+  ["デマ", "デマ", "tin đồn thất thiệt, tin giả"],
+  ["そそる", "そそる", "kích thích, gợi lên cảm giác/hứng thú; 食欲をそそる = gợi cảm giác thèm ăn"],
+  ["望ましい", "のぞましい", "đáng mong muốn, nên có, phù hợp"],
+  ["秘める", "ひめる", "ẩn giấu, chứa đựng bên trong; 可能性を秘める = chứa tiềm năng"],
+  ["素早い", "すばやい", "nhanh nhẹn, mau lẹ"],
+  ["なつく", "なつく", "quen thân, quấn quýt; 子ども/動物が人になつく = trẻ/con vật quen và thân với ai"],
+  ["もはや", "もはや", "đã đến mức không còn..., giờ thì đã...; もはや手遅れ = giờ đã quá muộn"],
+  ["作動", "さどう", "sự hoạt động/vận hành của máy móc; 作動する = máy chạy, thiết bị hoạt động"],
+  ["乗り出す", "のりだす", "bắt tay vào, tham gia tích cực; thân người nhô ra phía trước"],
+  ["面識", "めんしき", "quen biết qua gặp mặt; 面識がある = có quen/gặp qua"],
+  ["拠点", "きょてん", "căn cứ, điểm đặt hoạt động; 活動の拠点 = cơ sở hoạt động"],
+  ["軌道", "きどう", "quỹ đạo, đường ray; 軌道に乗る = đi vào ổn định/đúng hướng"],
+  ["人一倍", "ひといちばい", "hơn người khác, đặc biệt nhiều; 人一倍努力する = nỗ lực hơn người"],
+  ["はがす", "はがす", "bóc, gỡ, lột ra; シールをはがす = bóc nhãn dán"],
+  ["かばう", "かばう", "che chở, bênh vực, bảo vệ ai khỏi bị trách/phạt"],
+  ["免除", "めんじょ", "miễn trừ, miễn phải làm/nộp; 授業料を免除する = miễn học phí"],
+  ["有数", "ゆうすう", "hàng đầu, có số lượng/địa vị nổi bật; 世界有数の都市 = một thành phố hàng đầu thế giới"],
+  ["ゆとり", "ゆとり", "sự dư dả, khoảng thoải mái về thời gian/tiền bạc/tâm lý"],
+  ["質素", "しっそ", "giản dị, mộc mạc, không xa hoa"],
+  ["赴任", "ふにん", "nhận nhiệm sở, đi đến nơi được điều động làm việc"],
+  ["差し上げました", "さしあげました", "đã biếu/tặng/đưa cho; kính ngữ của あげました"],
+  ["すべて", "すべて", "tất cả, toàn bộ"],
+  ["になう", "になう", "gánh vác, đảm nhận vai trò/trách nhiệm"],
+  ["わざと", "わざと", "cố ý, có chủ đích"],
+  ["ヒント", "ヒント", "gợi ý, manh mối"],
+  ["やはり", "やはり", "quả nhiên, đúng như nghĩ; vẫn là"],
+  ["ただで", "ただで", "miễn phí, không mất tiền"],
+  ["しくみ", "しくみ", "cơ chế, cấu trúc vận hành"],
   ["繁盛", "はんじょう", "buôn bán phát đạt, thịnh vượng"],
   ["くじける", "くじける", "nản lòng, nhụt chí, gục tinh thần"],
   ["侮って", "あなどって", "coi thường, xem nhẹ"],
@@ -1375,9 +1408,7 @@ function isUsefulStudyEntry(word, reading, meaning) {
   const note = String(meaning || "");
   if (!source || !note) return false;
   if (note.includes("⇔") || note.includes("đáp án đúng trong câu này") || note.includes("cách đọc trong câu là")) return false;
-  if (/^[ぁ-んァ-ンー]+$/.test(source) && source.length <= 3) return false;
-  if (/^[ぁ-んァ-ンー]+$/.test(source) && /^[ぁ-んァ-ンー]+$/.test(readingText) && readingText.length <= 3 && source.length <= 3) return false;
-  if (source === "かない") return false;
+  if (["かない", "ュー"].includes(source)) return false;
   return true;
 }
 
@@ -1945,6 +1976,20 @@ function sourceMarkupToHtml(value) {
     .replace(/\[\[\/?h4\]\]/g, "");
 }
 
+function sourceMarkupToText(value) {
+  return String(value || "")
+    .replace(/\[\[blank\]\]/g, "（　）")
+    .replace(/\[\[br\]\]/g, "\n")
+    .replace(/\[\[[^\]]+\]\]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function underlinedSourceText(value) {
+  const match = String(value || "").match(/\[\[u\]\]([\s\S]*?)\[\[\/u\]\]/);
+  return match ? sourceMarkupToText(match[1]) : "";
+}
+
 function convertRemoteExam(exam, data) {
   const converted = [];
   data.sections.forEach((section) => {
@@ -1964,6 +2009,7 @@ function convertRemoteExam(exam, data) {
           promptMarkup,
           {
             starOrder: item.starOrder || item.correctOrder || item.fullOrder || item.order || "",
+            readingTarget: questionNumber >= 45 ? underlinedSourceText(item.textHtml) : "",
           }
         ));
       });
@@ -1979,7 +2025,7 @@ function targetFromQuestionText(question) {
   if (quoted) return quoted[1];
 
   if (number >= 20 && number <= 25) {
-    return prompt.replace(/^\d+\.\s*/, "").trim();
+    return prompt.replace(/^\d+\.\s*/, "").replace(/^\d+\s*/, "").trim();
   }
 
   const meaningPrompt = prompt.match(/^\d+\.\s*(.+?)。意味が近いものは？/);
@@ -2256,13 +2302,65 @@ function promptHtml(question) {
 }
 
 function passageHtml(question) {
-  const source = escapeHtml(question.passage || "");
+  let source = escapeHtml(question.passage || "");
   const number = questionNumber(question);
+  const readingTarget = readingPassageTarget(question);
+  if (question.skill === "reading" && readingTarget) {
+    source = highlightPassageFragment(source, readingTarget);
+  }
+  const readingMarker = readingPassageMarker(question);
+  if (question.skill === "reading" && readingMarker && source.includes(readingMarker)) {
+    source = source.replace(readingMarker, `<strong class="passage-blank-focus">${readingMarker}</strong>`);
+    return source;
+  }
   if (number < 41 || number > 44) return source;
   const variants = grammarMarkers(number);
   const marker = variants.find((value) => source.includes(value));
   if (!marker) return source;
   return source.replace(marker, `<strong class="passage-blank-focus">${marker}</strong>`);
+}
+
+function highlightPassageFragment(sourceHtml, fragment) {
+  const raw = String(fragment || "").trim();
+  const variants = [...new Set([
+    raw,
+    raw.replace(/[「」『』]/g, ""),
+    raw.replace(/^[①②③④⑤⑥⑦⑧⑨⑩]\s*/, ""),
+  ].map((value) => escapeHtml(value.trim())).filter((value) => value.length >= 2))];
+  const target = variants.find((value) => sourceHtml.includes(value) && !sourceHtml.includes(`>${value}</strong>`));
+  if (!target) return sourceHtml;
+  return sourceHtml.replace(target, `<strong class="passage-blank-focus">${target}</strong>`);
+}
+
+function readingPassageTarget(question) {
+  const explicit = String(question.readingTarget || "").trim();
+  if (explicit) return explicit;
+  const fromHtml = highlightedTargetFromHtml(question.htmlPrompt);
+  if (fromHtml) return fromHtml.replace(/^[①②③④⑤⑥⑦⑧⑨⑩]\s*/, "").trim();
+  return inferredReadingTarget(question.prompt);
+}
+
+function inferredReadingTarget(promptValue) {
+  let prompt = String(promptValue || "").replace(/^\d+\.\s*/, "").trim();
+  const hasLeadingMarker = /^[①②③④⑤⑥⑦⑧⑨⑩]/u.test(prompt) || /^[（(]\s*[1-9]\s*[）)]/u.test(prompt);
+  prompt = prompt.replace(/^[①②③④⑤⑥⑦⑧⑨⑩]\s*/, "").replace(/^[（(]\s*[1-9]\s*[）)]\s*/, "").trim();
+  const quoted = prompt.match(/[「『]([^」』]{2,80})[」』]/);
+  if (quoted) return quoted[1].trim();
+  const boundaryTokens = hasLeadingMarker ? ["とある", "とは", "と述べ", "と言って", "と言う", "と考えて"] : ["とある", "と述べ", "と言って", "と言う", "と考えて"];
+  const boundary = boundaryTokens.map((token) => prompt.indexOf(token)).filter((index) => index > 0).sort((a, b) => a - b)[0];
+  if (!boundary) return "";
+  const target = prompt.slice(0, boundary).replace(/^(筆者が|筆者は|ここでの|ここで|この|その|①|②|③|④)\s*/, "").trim();
+  return target.length >= 2 && target.length <= 80 ? target : "";
+}
+
+function readingPassageMarker(question) {
+  const prompt = String(question.prompt || "").replace(/^\d+\.\s*/, "").trim();
+  const circled = prompt.match(/[①②③④⑤⑥⑦⑧⑨⑩]/u)?.[0];
+  if (circled) return circled;
+  const bracketed = prompt.match(/^[（(]\s*([1-9])\s*[）)]/) || prompt.match(/[「『]?[（(]\s*([1-9])\s*[）)][」』]?/);
+  if (!bracketed) return "";
+  const digit = bracketed[1];
+  return question.passage?.includes(`(${digit})`) ? `(${digit})` : `（${digit}）`;
 }
 
 function toFullWidthDigits(value) {
