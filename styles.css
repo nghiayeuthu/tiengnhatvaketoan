@@ -158,6 +158,28 @@ a {
   gap: 8px;
 }
 
+.exam-countdown {
+  display: grid;
+  min-width: 112px;
+  border: 1px solid rgba(27, 127, 95, 0.22);
+  border-radius: 8px;
+  padding: 7px 12px;
+  color: var(--green-dark);
+  background: #e5f3ec;
+  line-height: 1.1;
+}
+
+.exam-countdown span {
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.exam-countdown small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .nav a,
 .ghost-button,
 .filter {
@@ -690,6 +712,12 @@ h1 {
   font-weight: 900;
 }
 
+.flashcard-reading {
+  margin: -4px 0 12px;
+  color: var(--green-dark);
+  font-weight: 800;
+}
+
 .flashcard .meaning {
   color: var(--muted);
   line-height: 1.7;
@@ -739,6 +767,10 @@ h1 {
   .nav {
     justify-content: flex-start;
     overflow-x: auto;
+  }
+
+  .exam-countdown {
+    width: fit-content;
   }
 
   .hero,

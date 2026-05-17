@@ -1,6 +1,8 @@
 ﻿const questions = [];
 
 const sitePasswordHash = "69ba727f4ea30163a7d6b2a9045da29cdfd1671ec6cb0f8375bdd645ea572518";
+const hanVietSourceUrl = "https://dahlia.github.io/unihan-json/12.1.0/kVietnamese.json";
+let hanVietMap = {};
 
 async function sha256Hex(value) {
   const bytes = new TextEncoder().encode(value);
@@ -11,6 +13,31 @@ async function sha256Hex(value) {
 function unlockSite() {
   document.body.classList.remove("locked");
   sessionStorage.setItem("tiengNhatVaKeToanUnlocked", "1");
+}
+
+function updateExamCountdown() {
+  const value = document.querySelector("#examCountdownValue");
+  const label = document.querySelector("#examCountdownLabel");
+  if (!value || !label) return;
+  const today = new Date();
+  const localToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const examDate = new Date(2026, 6, 5);
+  const daysLeft = Math.ceil((examDate - localToday) / 86400000);
+
+  if (daysLeft > 0) {
+    value.textContent = String(daysLeft);
+    label.textContent = "ngày tới JLPT 5/7";
+    return;
+  }
+
+  if (daysLeft === 0) {
+    value.textContent = "Hôm nay";
+    label.textContent = "thi JLPT 5/7";
+    return;
+  }
+
+  value.textContent = "Đã qua";
+  label.textContent = "JLPT 5/7/2026";
 }
 
 function setupAuthGate() {
@@ -39,6 +66,7 @@ function setupAuthGate() {
 }
 
 setupAuthGate();
+updateExamCountdown();
 
 function q(type, label, prompt, options, answer, explanation, passageText = "", htmlPrompt = "", meta = {}) {
   return {
@@ -1524,8 +1552,21 @@ function cleanMeaningText(meaning) {
     .trim();
 }
 
+function hanVietForText(text) {
+  const kanji = [...String(text || "")].filter((char) => /[\u3400-\u9fff]/u.test(char));
+  if (!kanji.length) return "";
+  const readings = kanji.map((char) => {
+    const value = hanVietMap[char];
+    if (Array.isArray(value)) return value[0] || "";
+    return String(value || "").split(/[,\s]+/)[0];
+  });
+  return readings.every(Boolean) ? readings.join(" ") : "";
+}
+
 function vocabNoteText(word, reading, meaning) {
-  return `${word}（${reading}）= ${cleanMeaningText(meaning)}`;
+  const hanViet = hanVietForText(word);
+  const pronunciation = hanViet ? `${reading}, ${hanViet}` : reading;
+  return `${word}（${pronunciation}）= ${cleanMeaningText(meaning)}`;
 }
 
 function termMeaning(term) {
@@ -1537,7 +1578,9 @@ function answerMeaningLine(term) {
   const entry = lookupVocabAnswer(term);
   if (!entry) return `Đáp án đúng: 「${term}」. Chưa có nghĩa tiếng Việt trong từ điển, cần bổ sung.`;
   const baseNote = entry.base !== term ? `, gốc: ${entry.base}` : "";
-  const readingNote = entry.reading && entry.reading !== term && entry.reading !== entry.base ? `（${entry.reading}）` : "";
+  const hanViet = hanVietForText(entry.base);
+  const pronunciation = [entry.reading && entry.reading !== term && entry.reading !== entry.base ? entry.reading : "", hanViet].filter(Boolean).join(", ");
+  const readingNote = pronunciation ? `（${pronunciation}）` : "";
   return `Đáp án đúng: 「${term}」${readingNote} = ${cleanMeaningText(entry.meaning)}${baseNote}.`;
 }
 
@@ -2237,6 +2280,17 @@ function enhanceQuestions(list) {
   list.forEach(enhanceQuestion);
 }
 
+async function loadHanVietMap() {
+  try {
+    const response = await fetch(hanVietSourceUrl);
+    if (!response.ok) throw new Error("Không tải được bảng âm Hán Việt");
+    hanVietMap = await response.json();
+  } catch (error) {
+    console.warn(error);
+    hanVietMap = {};
+  }
+}
+
 async function loadRemoteExams() {
   const remoteLoaded = await Promise.allSettled(remoteExams.map(async (exam) => {
     const response = await fetch(`${exam.path}?v=${examDataVersion}`);
@@ -2767,12 +2821,19 @@ function folderTitle(folderId) {
 function flashcardsFromFolders(skill = state.deckType) {
   return questions
     .filter((question) => question.folder && question.skill === skill)
-    .map((question) => ({
-      tag: folderTitle(question.folder),
-      jp: skill === "vocab" ? question.options[question.answer] : question.prompt.replace(/^\d+\.\s*/, ""),
-      vn: question.prompt.replace(/^\d+\.\s*/, ""),
-      example: question.explanation,
-    }));
+    .map((question) => {
+      const answer = question.options[question.answer];
+      const vocabEntry = skill === "vocab" ? lookupVocabAnswer(answer) : null;
+      const baseWord = vocabEntry?.base || answer;
+      return {
+        tag: folderTitle(question.folder),
+        jp: skill === "vocab" ? answer : question.prompt.replace(/^\d+\.\s*/, ""),
+        reading: vocabEntry?.reading || "",
+        hanViet: skill === "vocab" ? hanVietForText(baseWord) : "",
+        vn: question.prompt.replace(/^\d+\.\s*/, ""),
+        example: question.explanation,
+      };
+    });
 }
 
 function renderDeck() {
@@ -2821,6 +2882,7 @@ function renderDeck() {
   item.innerHTML = `
     <span class="tag">${card.tag}</span>
     <div class="jp">${card.jp}</div>
+    ${card.reading || card.hanViet ? `<div class="flashcard-reading">${[card.reading, card.hanViet].filter(Boolean).join(" · ")}</div>` : ""}
     <div class="meaning">${card.vn}<br><strong>${card.example}</strong></div>
   `;
   item.addEventListener("click", () => {
@@ -2911,7 +2973,8 @@ renderBokiFolders();
 showAppView();
 updateMetrics();
 
-loadRemoteExams()
+loadHanVietMap()
+  .then(() => loadRemoteExams())
   .then(() => {
     state.loading = false;
     renderQuestion();
