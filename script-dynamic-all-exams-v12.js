@@ -1560,7 +1560,7 @@ function hanVietForText(text) {
     if (Array.isArray(value)) return value[0] || "";
     return String(value || "").split(/[,\s]+/)[0];
   });
-  return readings.every(Boolean) ? readings.join(" ") : "";
+  return readings.filter(Boolean).join(" ");
 }
 
 function vocabNoteText(word, reading, meaning) {
