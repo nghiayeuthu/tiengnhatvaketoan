@@ -258,6 +258,22 @@ h1 {
   margin-top: 28px;
 }
 
+#practice .quiz-actions {
+  position: fixed;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 18;
+  justify-content: center;
+  margin-top: 0;
+  border: 1px solid rgba(220, 230, 223, 0.92);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 34px rgba(23, 33, 31, 0.16);
+  transform: translateX(-50%);
+  backdrop-filter: blur(14px);
+}
+
 .primary-button,
 .secondary-button {
   display: inline-flex;
@@ -317,7 +333,7 @@ h1 {
 .section {
   scroll-margin-top: 92px;
   min-height: calc(100vh - 76px);
-  padding: 12px clamp(18px, 5vw, 72px) 72px;
+  padding: 12px clamp(18px, 5vw, 72px) 112px;
   background: var(--paper);
 }
 
@@ -576,6 +592,48 @@ h1 {
   background: #fbfdfb;
 }
 
+#practice .question-jump {
+  position: fixed;
+  top: 118px;
+  right: 0;
+  z-index: 17;
+  width: min(360px, calc(100vw - 54px));
+  max-height: calc(100vh - 206px);
+  margin-top: 0;
+  border-right: 0;
+  border-radius: 8px 0 0 8px;
+  box-shadow: 0 14px 34px rgba(23, 33, 31, 0.14);
+  overflow-y: auto;
+  transition: transform 180ms ease;
+}
+
+#practice .question-jump.is-collapsed {
+  transform: translateX(calc(100% - 46px));
+}
+
+#practice .question-jump-toggle {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  display: grid;
+  width: 46px;
+  min-height: 54px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-right: 0;
+  border-radius: 8px 0 0 8px;
+  color: var(--green-dark);
+  background: var(--white);
+  box-shadow: 0 10px 22px rgba(23, 33, 31, 0.12);
+  cursor: pointer;
+  font-weight: 900;
+  writing-mode: vertical-rl;
+}
+
+#practice .question-jump-heading {
+  padding-left: 42px;
+}
+
 .question-jump-heading {
   display: flex;
   align-items: center;
@@ -815,5 +873,25 @@ h1 {
 
   .question-jump-grid {
     grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+  }
+
+  #practice .quiz-actions {
+    right: 10px;
+    left: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: auto;
+    transform: none;
+  }
+
+  #practice .quiz-actions .secondary-button,
+  #practice .quiz-actions .primary-button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  #practice .question-jump {
+    top: 96px;
+    width: min(82vw, 340px);
+    max-height: calc(100vh - 190px);
   }
 }

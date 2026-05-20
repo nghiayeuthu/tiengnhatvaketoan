@@ -173,6 +173,7 @@ const state = {
   deckType: "vocab",
   deckIndex: 0,
   deckOpen: false,
+  questionJumpOpen: false,
 };
 
 const bokiFolders = [
@@ -383,7 +384,6 @@ const feedback = document.querySelector("#feedback");
 const questionJump = document.querySelector("#questionJump");
 const nextButton = document.querySelector("#nextQuestion");
 const prevButton = document.querySelector("#prevQuestion");
-const backToFoldersButton = document.querySelector("#backToFolders");
 const filters = document.querySelectorAll(".filter[data-filter]");
 const folderBackFilter = document.querySelector("#folderBackFilter");
 const deckGrid = document.querySelector("#deckGrid");
@@ -679,6 +679,13 @@ const sortedN2Vocabulary = [...n2Vocabulary].sort((a, b) => b[0].length - a[0].l
 const sortedStudyVocabulary = [...n1Vocabulary, ...n2Vocabulary].sort((a, b) => b[0].length - a[0].length);
 
 const supplementalVocabAnswers = [
+  ["勝手", "かって", "tự tiện, theo ý mình; hoàn cảnh/tiện lợi tùy ngữ cảnh"],
+  ["身勝手", "みがって", "ích kỷ, chỉ nghĩ cho bản thân"],
+  ["込む", "こむ", "đông đúc; đi vào/đưa vào trong; làm kỹ, dồn vào"],
+  ["自前", "じまえ", "tự mình chuẩn bị, đồ/cái của mình"],
+  ["自分", "じぶん", "bản thân, tự mình"],
+  ["買う", "かう", "mua"],
+  ["自分で買う", "じぶんでかう", "tự mình mua"],
   ["添付", "てんぷ", "đính kèm, gửi kèm tài liệu"],
   ["対比", "たいひ", "đối chiếu, so sánh tương phản"],
   ["自然に", "しぜんに", "một cách tự nhiên"],
@@ -1421,10 +1428,11 @@ function labelFor(title, questionNumber) {
 function n1EntriesForText(text, maxItems = 6) {
   const source = String(text || "");
   const found = [];
-  sortedN1Vocabulary.forEach(([word, reading, meaning]) => {
+  const entries = [...supplementalVocabAnswers, ...sortedN1Vocabulary].sort((a, b) => String(b[0]).length - String(a[0]).length);
+  entries.forEach(([word, reading, meaning]) => {
     if (found.length >= maxItems) return;
     if (!isUsefulStudyEntry(word, reading, meaning)) return;
-    if (source.includes(word) && !found.some((item) => item.word === word)) {
+    if (source.includes(word) && !found.some((item) => item.word === word || item.word.includes(word) || word.includes(item.word))) {
       found.push({ word, reading, meaning });
     }
   });
@@ -1432,12 +1440,19 @@ function n1EntriesForText(text, maxItems = 6) {
 }
 
 function isUsefulStudyEntry(word, reading, meaning) {
-  const source = String(word || "");
-  const readingText = String(reading || "");
-  const note = String(meaning || "");
+  const source = String(word || "").trim();
+  const readingText = String(reading || "").trim();
+  const note = String(meaning || "").trim();
   if (!source || !note) return false;
   if (note.includes("⇔") || note.includes("đáp án đúng trong câu này") || note.includes("cách đọc trong câu là")) return false;
-  if (["かない", "ュー"].includes(source)) return false;
+  if (/[\[\]{}]/u.test(note)) return false;
+  if (/[\u3400-\u9fff]/u.test(source) && /[\u3400-\u9fff]/u.test(readingText)) return false;
+  if (["かない", "ュー", "ンする", "ング"].includes(source)) return false;
+  if (/^[ンー]/u.test(source)) return false;
+  if (/^[ァ-ンー]+(?:する)?$/u.test(source) && source.length <= 4) return false;
+  if (source === "買う" && note.includes("bác")) return false;
+  if (source === "込む" && readingText !== "こむ") return false;
+  if (source === "勝手" && note.includes("nhà bếp")) return false;
   return true;
 }
 
@@ -1452,7 +1467,7 @@ function n2EntriesForText(text, maxItems = 6) {
   const found = [];
   sortedN2Vocabulary.forEach(([word, reading, meaning]) => {
     if (found.length >= maxItems) return;
-    if (source.includes(word) && !found.some((item) => item.word === word)) {
+    if (source.includes(word) && !found.some((item) => item.word === word || item.word.includes(word) || word.includes(item.word))) {
       found.push({ word, reading, meaning });
     }
   });
@@ -1503,7 +1518,9 @@ function studyEntriesForText(text, maxItems = 1) {
 
 function entryForExactTerm(term) {
   const source = normalizeLookupTerm(term);
-  return supplementalVocabAnswers.find(([word]) => normalizeLookupTerm(word) === source) || sortedStudyVocabulary.find(([word]) => normalizeLookupTerm(word) === source);
+  const candidates = [...supplementalVocabAnswers, ...sortedStudyVocabulary]
+    .filter(([word]) => normalizeLookupTerm(word) === source);
+  return candidates.find(([word, reading, meaning]) => isUsefulStudyEntry(word, reading, meaning)) || null;
 }
 
 function vocabAnswerForms(term) {
@@ -1850,6 +1867,28 @@ function n1GrammarNotesForQuestion(item, group = null) {
   return `\nNgữ pháp N1 cần nhớ: ${entries.map((entry) => `「${entry.pattern}」= ${entry.meaning}`).join("; ")}.`;
 }
 
+function readingEntriesForQuestionText(question, maxItems = 10) {
+  const source = [question.prompt, question.passage || "", ...(question.options || [])].join(" ");
+  const entries = [...supplementalVocabAnswers, ...n1Vocabulary, ...n2Vocabulary]
+    .filter(([word, reading, meaning]) => /[\u3400-\u9fff]/u.test(word) && isUsefulStudyEntry(word, reading, meaning))
+    .sort((a, b) => String(b[0]).length - String(a[0]).length);
+  const found = [];
+  entries.forEach(([word, reading, meaning]) => {
+    if (found.length >= maxItems) return;
+    if (!source.includes(word)) return;
+    if (found.some((entry) => entry.word === word || entry.word.includes(word) || word.includes(entry.word))) return;
+    found.push({ word, reading, meaning });
+  });
+  return found;
+}
+
+function addKanjiReadingNotesToExplanation(question) {
+  if (!question.explanation || question.explanation.includes("Cách đọc kanji trong câu:")) return;
+  const entries = readingEntriesForQuestionText(question);
+  if (!entries.length) return;
+  question.explanation += `\nCách đọc kanji trong câu: ${entries.map((entry) => `${entry.word}（${entry.reading}）`).join("; ")}.`;
+}
+
 function withStudyNotes(baseExplanation, item, group = null) {
   return `${baseExplanation}${n1GrammarNotesForQuestion(item, group)}${n1NotesForQuestion(item, group, baseExplanation)}${n2NotesForQuestion(item, group, baseExplanation)}`;
 }
@@ -2158,10 +2197,14 @@ function enhanceQuestion(question) {
     question.explanation = readingExplanationForLocalQuestion(question);
   }
   prependAnswerDetail(question);
-  if (questionNumber(question) >= 20 && questionNumber(question) <= 25) return question;
+  if (questionNumber(question) >= 20 && questionNumber(question) <= 25) {
+    addKanjiReadingNotesToExplanation(question);
+    return question;
+  }
   addN1GrammarNotesToExplanation(question);
   addN1NotesToExplanation(question);
   addN2NotesToExplanation(question);
+  addKanjiReadingNotesToExplanation(question);
   return question;
 }
 
@@ -2288,6 +2331,9 @@ async function loadHanVietMap() {
   } catch (error) {
     console.warn(error);
     hanVietMap = {};
+  }
+  if (window.hanVietExtra && typeof window.hanVietExtra === "object") {
+    hanVietMap = { ...hanVietMap, ...window.hanVietExtra };
   }
 }
 
@@ -2488,10 +2534,8 @@ function renderQuestion() {
   if (folderBackFilter) folderBackFilter.hidden = false;
   prevButton.hidden = false;
   nextButton.hidden = false;
-  backToFoldersButton.hidden = false;
   prevButton.style.display = "";
   nextButton.style.display = "";
-  backToFoldersButton.style.display = "";
   const list = activeQuestions();
   if (!list.length) {
     questionType.textContent = state.loading ? "Đang tải" : "Chưa có câu hỏi";
@@ -2535,10 +2579,8 @@ function renderFolderDirectory() {
   if (folderBackFilter) folderBackFilter.hidden = true;
   prevButton.hidden = true;
   nextButton.hidden = true;
-  backToFoldersButton.hidden = true;
   prevButton.style.display = "none";
   nextButton.style.display = "none";
-  backToFoldersButton.style.display = "none";
   questionType.textContent = "Thư mục đề";
   questionText.textContent = state.loading ? "Đang tải thêm thư mục đề..." : "Chọn thư mục để luyện đề";
   questionCount.textContent = `${examFolders.length} thư mục`;
@@ -2740,6 +2782,18 @@ function renderQuestionJump(list) {
 
   questionJump.hidden = false;
   questionJump.innerHTML = "";
+  questionJump.classList.toggle("is-collapsed", !state.questionJumpOpen);
+
+  const toggle = document.createElement("button");
+  toggle.className = "question-jump-toggle";
+  toggle.type = "button";
+  toggle.textContent = state.questionJumpOpen ? "Ẩn" : "Câu";
+  toggle.setAttribute("aria-expanded", String(state.questionJumpOpen));
+  toggle.addEventListener("click", () => {
+    state.questionJumpOpen = !state.questionJumpOpen;
+    renderQuestionJump(list);
+  });
+  questionJump.appendChild(toggle);
 
   const heading = document.createElement("div");
   heading.className = "question-jump-heading";
@@ -2946,9 +3000,6 @@ function setFilter(filter) {
 
 nextButton.addEventListener("click", () => moveQuestion(1));
 prevButton.addEventListener("click", () => moveQuestion(-1));
-backToFoldersButton.addEventListener("click", () => {
-  setFilter(state.filter.startsWith("boki-") ? "boki-all" : "all");
-});
 bokiNextButton.addEventListener("click", () => moveBokiQuestion(1));
 bokiPrevButton.addEventListener("click", () => moveBokiQuestion(-1));
 bokiBackToFoldersButton.addEventListener("click", () => {
