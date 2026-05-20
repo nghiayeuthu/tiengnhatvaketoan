@@ -94,9 +94,90 @@ body:not(.locked) .auth-gate {
   font-weight: 800;
 }
 
+.auth-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 0;
+  color: var(--green-dark);
+  font-weight: 800;
+}
+
+.auth-loading[hidden] {
+  display: none;
+}
+
+.auth-loading span,
+.loading-spinner {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  border: 3px solid rgba(27, 127, 95, 0.2);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
 .auth-card .primary-button {
   width: 100%;
   margin-top: 18px;
+}
+
+.auth-card.is-loading .primary-button,
+.auth-card.is-loading .auth-input {
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.auth-card.is-loading-lite .primary-button {
+  opacity: 0.84;
+}
+
+.app-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  place-items: center;
+  padding: 24px;
+  background: rgba(247, 250, 247, 0.82);
+  backdrop-filter: blur(10px);
+}
+
+body.app-loading .app-loading {
+  display: grid;
+}
+
+body.locked .app-loading {
+  display: none;
+}
+
+.app-loading-card {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(100%, 360px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 26px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow);
+}
+
+.app-loading-card strong {
+  font-size: 20px;
+}
+
+.app-loading-card small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 button,

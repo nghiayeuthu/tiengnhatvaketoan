@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=8" />
+    <link rel="stylesheet" href="styles.css?v=10" />
   </head>
   <body class="locked">
     <section class="auth-gate" id="authGate" aria-labelledby="authTitle">
@@ -20,8 +20,30 @@
         <label class="auth-label" for="sitePassword">Mật khẩu truy cập</label>
         <input class="auth-input" id="sitePassword" type="password" autocomplete="current-password" inputmode="numeric" required />
         <p class="auth-error" id="authError" hidden>Mật khẩu chưa đúng.</p>
+        <p class="auth-loading" id="authLoading" hidden><span></span>Đang tải dữ liệu, nếu lag vui lòng đợi 5 giây</p>
         <button class="primary-button" type="submit">Vào học</button>
       </form>
+    </section>
+    <script>
+      (() => {
+        const form = document.querySelector("#authForm");
+        const input = document.querySelector("#sitePassword");
+        const loading = document.querySelector("#authLoading");
+        const showEarlyLoading = () => {
+          if (loading) loading.hidden = false;
+          form?.classList.add("is-loading-lite");
+        };
+        input?.addEventListener("input", showEarlyLoading, { once: true });
+        form?.addEventListener("submit", showEarlyLoading);
+      })();
+    </script>
+
+    <section class="app-loading" id="appLoading" aria-live="polite" aria-label="Đang tải dữ liệu">
+      <div class="app-loading-card">
+        <span class="loading-spinner"></span>
+        <strong>Đang tải dữ liệu, nếu lag vui lòng đợi 5 giây</strong>
+        <small>Vui lòng đợi trong giây lát.</small>
+      </div>
     </section>
 
     <header class="topbar">
@@ -108,6 +130,6 @@
 
     <script src="n1-vocabulary-extra.js?v=6"></script>
     <script src="n1-grammar-extra.js?v=1"></script>
-    <script src="script-dynamic-all-exams-v12.js?v=64"></script>
+    <script src="script-dynamic-all-exams-v12.js?v=65"></script>
   </body>
 </html>

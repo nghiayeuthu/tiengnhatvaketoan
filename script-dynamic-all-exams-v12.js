@@ -3,6 +3,7 @@
 const sitePasswordHash = "69ba727f4ea30163a7d6b2a9045da29cdfd1671ec6cb0f8375bdd645ea572518";
 const hanVietSourceUrl = "https://dahlia.github.io/unihan-json/12.1.0/kVietnamese.json";
 let hanVietMap = {};
+let appDataReady = false;
 
 async function sha256Hex(value) {
   const bytes = new TextEncoder().encode(value);
@@ -10,9 +11,27 @@ async function sha256Hex(value) {
   return [...new Uint8Array(hash)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+function showAppLoading() {
+  if (!appDataReady) document.body.classList.add("app-loading");
+}
+
+function hideAppLoading() {
+  document.body.classList.remove("app-loading");
+}
+
+function setAuthLoading(isLoading) {
+  const form = document.querySelector("#authForm");
+  const loading = document.querySelector("#authLoading");
+  const button = form?.querySelector("button[type='submit']");
+  form?.classList.toggle("is-loading", isLoading);
+  if (loading) loading.hidden = !isLoading;
+  if (button) button.disabled = isLoading;
+}
+
 function unlockSite() {
   document.body.classList.remove("locked");
   sessionStorage.setItem("tiengNhatVaKeToanUnlocked", "1");
+  showAppLoading();
 }
 
 function updateExamCountdown() {
@@ -54,12 +73,14 @@ function setupAuthGate() {
     event.preventDefault();
     const typedHash = await sha256Hex(input.value.trim());
     if (typedHash === sitePasswordHash) {
-      unlockSite();
+      setAuthLoading(true);
       input.value = "";
       error.hidden = true;
+      requestAnimationFrame(() => unlockSite());
       return;
     }
 
+    setAuthLoading(false);
     error.hidden = false;
     input.select();
   });
@@ -3028,12 +3049,16 @@ loadHanVietMap()
   .then(() => loadRemoteExams())
   .then(() => {
     state.loading = false;
+    appDataReady = true;
+    hideAppLoading();
     renderQuestion();
     renderDeck();
     renderBokiFolders();
   })
   .catch((error) => {
     state.loading = false;
+    appDataReady = true;
+    hideAppLoading();
     feedback.hidden = false;
     feedback.textContent = error.message;
     renderQuestion();
