@@ -2808,7 +2808,7 @@ function renderQuestionJump(list) {
   const toggle = document.createElement("button");
   toggle.className = "question-jump-toggle";
   toggle.type = "button";
-  toggle.textContent = state.questionJumpOpen ? "Ẩn" : "Câu";
+  toggle.textContent = state.questionJumpOpen ? "Ẩn" : "Chọn Câu";
   toggle.setAttribute("aria-expanded", String(state.questionJumpOpen));
   toggle.addEventListener("click", () => {
     state.questionJumpOpen = !state.questionJumpOpen;
