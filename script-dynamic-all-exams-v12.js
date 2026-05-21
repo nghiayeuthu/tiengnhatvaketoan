@@ -2630,6 +2630,17 @@ function stopDrawing(event) {
   }
 }
 
+function preventDrawingGesture(event) {
+  if (drawingOverlay && !drawingOverlay.hidden) {
+    event.preventDefault();
+    window.getSelection?.().removeAllRanges?.();
+  }
+}
+
+function clearSelectionWhileDrawing() {
+  if (drawingOverlay && !drawingOverlay.hidden) window.getSelection?.().removeAllRanges?.();
+}
+
 function resetDrawingPad() {
   if (!drawingPad) return;
   drawingPad.hidden = false;
@@ -3143,10 +3154,15 @@ openDrawingButton?.addEventListener("click", openDrawingPad);
 closeDrawingButton?.addEventListener("click", closeDrawingPad);
 answerCanvas?.addEventListener("pointerdown", startDrawing);
 answerCanvas?.addEventListener("pointermove", drawAnswerStroke);
+answerCanvas?.addEventListener("pointerrawupdate", drawAnswerStroke);
 answerCanvas?.addEventListener("pointerup", stopDrawing);
 answerCanvas?.addEventListener("pointercancel", stopDrawing);
 answerCanvas?.addEventListener("pointerleave", stopDrawing);
 answerCanvas?.addEventListener("lostpointercapture", stopDrawing);
+answerCanvas?.addEventListener("touchstart", preventDrawingGesture, { passive: false });
+answerCanvas?.addEventListener("touchmove", preventDrawingGesture, { passive: false });
+answerCanvas?.addEventListener("touchend", preventDrawingGesture, { passive: false });
+document.addEventListener("selectionchange", clearSelectionWhileDrawing);
 clearDrawingButton?.addEventListener("click", clearDrawingCanvas);
 [drawingPad, drawingOverlay, answerCanvas, openDrawingButton, closeDrawingButton, clearDrawingButton, prevButton, nextButton, document.querySelector("#practice .quiz-actions")].forEach((element) => {
   element?.addEventListener("selectstart", (event) => event.preventDefault());
