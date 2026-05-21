@@ -3091,6 +3091,11 @@ answerCanvas?.addEventListener("pointermove", drawAnswerStroke);
 answerCanvas?.addEventListener("pointerup", stopDrawing);
 answerCanvas?.addEventListener("pointercancel", stopDrawing);
 clearDrawingButton?.addEventListener("click", clearDrawingCanvas);
+[drawingPad, answerCanvas, clearDrawingButton].forEach((element) => {
+  element?.addEventListener("selectstart", (event) => event.preventDefault());
+  element?.addEventListener("contextmenu", (event) => event.preventDefault());
+  element?.addEventListener("dragstart", (event) => event.preventDefault());
+});
 
 function setFilter(filter) {
   filters.forEach((item) => item.classList.toggle("active", item.dataset.filter === filter));
