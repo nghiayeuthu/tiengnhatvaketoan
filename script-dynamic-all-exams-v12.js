@@ -403,6 +403,9 @@ const passage = document.querySelector("#passage");
 const answers = document.querySelector("#answers");
 const feedback = document.querySelector("#feedback");
 const drawingPad = document.querySelector(".answer-drawing-pad");
+const drawingOverlay = document.querySelector("#drawingOverlay");
+const openDrawingButton = document.querySelector("#openDrawing");
+const closeDrawingButton = document.querySelector("#closeDrawing");
 const answerCanvas = document.querySelector("#answerCanvas");
 const clearDrawingButton = document.querySelector("#clearDrawing");
 const questionJump = document.querySelector("#questionJump");
@@ -2550,34 +2553,36 @@ function scrollQuestionIntoView() {
 let drawingContext = null;
 let drawingPointerId = null;
 let drawingLastPoint = null;
-let drawingSavedImage = null;
+let drawingNeedsClear = true;
+let drawingCanvasWidth = 0;
+let drawingCanvasHeight = 0;
 
 function setupDrawingCanvas() {
   if (!answerCanvas) return;
   const rect = answerCanvas.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
   const ratio = window.devicePixelRatio || 1;
-  answerCanvas.width = Math.round(rect.width * ratio);
-  answerCanvas.height = Math.round(rect.height * ratio);
+  const nextWidth = Math.round(rect.width * ratio);
+  const nextHeight = Math.round(rect.height * ratio);
+  if (answerCanvas.width !== nextWidth || answerCanvas.height !== nextHeight) {
+    answerCanvas.width = nextWidth;
+    answerCanvas.height = nextHeight;
+    drawingCanvasWidth = nextWidth;
+    drawingCanvasHeight = nextHeight;
+  }
   drawingContext = answerCanvas.getContext("2d");
   drawingContext.setTransform(ratio, 0, 0, ratio, 0, 0);
   drawingContext.lineCap = "round";
   drawingContext.lineJoin = "round";
   drawingContext.lineWidth = 4;
   drawingContext.strokeStyle = "#17211f";
-  if (drawingSavedImage) {
-    const image = new Image();
-    image.onload = () => drawingContext.drawImage(image, 0, 0, rect.width, rect.height);
-    image.src = drawingSavedImage;
-  }
 }
 
 function clearDrawingCanvas() {
-  if (!answerCanvas || !drawingContext) setupDrawingCanvas();
   if (!answerCanvas || !drawingContext) return;
   const rect = answerCanvas.getBoundingClientRect();
   drawingContext.clearRect(0, 0, rect.width, rect.height);
-  drawingSavedImage = null;
+  drawingNeedsClear = false;
 }
 
 function pointFromCanvasEvent(event) {
@@ -2611,7 +2616,6 @@ function drawAnswerStroke(event) {
 function stopDrawing(event) {
   if (drawingPointerId === event.pointerId) {
     event.preventDefault();
-    if (answerCanvas) drawingSavedImage = answerCanvas.toDataURL("image/png");
     drawingPointerId = null;
     drawingLastPoint = null;
   }
@@ -2620,10 +2624,26 @@ function stopDrawing(event) {
 function resetDrawingPad() {
   if (!drawingPad) return;
   drawingPad.hidden = false;
+  drawingNeedsClear = true;
+  closeDrawingPad();
+}
+
+function openDrawingPad() {
+  if (!drawingOverlay) return;
+  drawingOverlay.hidden = false;
+  document.body.classList.add("drawing-open");
   requestAnimationFrame(() => {
     setupDrawingCanvas();
-    clearDrawingCanvas();
+    if (drawingNeedsClear) clearDrawingCanvas();
   });
+}
+
+function closeDrawingPad() {
+  if (!drawingOverlay) return;
+  drawingOverlay.hidden = true;
+  document.body.classList.remove("drawing-open");
+  drawingPointerId = null;
+  drawingLastPoint = null;
 }
 
 function renderQuestion() {
@@ -3102,8 +3122,12 @@ navLinks.forEach((link) => {
 });
 
 window.addEventListener("hashchange", () => showAppView());
-window.addEventListener("resize", () => resetDrawingPad());
+window.addEventListener("resize", () => {
+  if (drawingOverlay && !drawingOverlay.hidden) setupDrawingCanvas();
+});
 
+openDrawingButton?.addEventListener("click", openDrawingPad);
+closeDrawingButton?.addEventListener("click", closeDrawingPad);
 answerCanvas?.addEventListener("pointerdown", startDrawing);
 answerCanvas?.addEventListener("pointermove", drawAnswerStroke);
 answerCanvas?.addEventListener("pointerup", stopDrawing);
@@ -3111,7 +3135,7 @@ answerCanvas?.addEventListener("pointercancel", stopDrawing);
 answerCanvas?.addEventListener("pointerleave", stopDrawing);
 answerCanvas?.addEventListener("lostpointercapture", stopDrawing);
 clearDrawingButton?.addEventListener("click", clearDrawingCanvas);
-[drawingPad, answerCanvas, clearDrawingButton, prevButton, nextButton, document.querySelector("#practice .quiz-actions")].forEach((element) => {
+[drawingPad, drawingOverlay, answerCanvas, openDrawingButton, closeDrawingButton, clearDrawingButton, prevButton, nextButton, document.querySelector("#practice .quiz-actions")].forEach((element) => {
   element?.addEventListener("selectstart", (event) => event.preventDefault());
   element?.addEventListener("contextmenu", (event) => event.preventDefault());
   element?.addEventListener("dragstart", (event) => event.preventDefault());

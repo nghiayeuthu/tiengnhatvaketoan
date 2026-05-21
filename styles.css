@@ -698,13 +698,53 @@ h1 {
 .answer-drawing-pad {
   margin-top: 18px;
   margin-bottom: 22px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 12px;
-  background: #fbfdfb;
   user-select: none;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
+}
+
+.drawing-open {
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 18px;
+  color: var(--green-dark);
+  background: var(--white);
+  cursor: pointer;
+  font-weight: 900;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
+.drawing-open::before {
+  content: attr(data-label);
+}
+
+.drawing-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: rgba(247, 250, 247, 0.96);
+}
+
+.drawing-overlay[hidden] {
+  display: none;
+}
+
+.drawing-modal {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--white);
+  box-shadow: var(--shadow);
 }
 
 .drawing-pad-top {
@@ -717,7 +757,13 @@ h1 {
   font-weight: 900;
 }
 
-.drawing-clear {
+.drawing-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.drawing-clear,
+.drawing-close {
   min-height: 34px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -732,7 +778,9 @@ h1 {
   -webkit-user-select: none;
 }
 
-.drawing-clear:hover {
+.drawing-clear:hover,
+.drawing-close:hover,
+.drawing-open:hover {
   color: white;
   background: var(--green);
 }
@@ -740,7 +788,8 @@ h1 {
 #answerCanvas {
   display: block;
   width: 100%;
-  height: clamp(180px, 30vh, 340px);
+  height: 100%;
+  min-height: 280px;
   border: 1px dashed rgba(27, 127, 95, 0.34);
   border-radius: 8px;
   background: white;
@@ -749,6 +798,10 @@ h1 {
   user-select: none;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
+}
+
+body.drawing-open {
+  overflow: hidden;
 }
 
 .question-jump {
@@ -1074,7 +1127,7 @@ h1 {
   }
 
   #answerCanvas {
-    height: clamp(190px, 34vh, 320px);
+    min-height: 300px;
   }
 
   .question-jump-grid {
