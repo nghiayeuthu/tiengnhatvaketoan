@@ -681,6 +681,51 @@ h1 {
   white-space: pre-line;
 }
 
+.answer-drawing-pad {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbfdfb;
+}
+
+.drawing-pad-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  color: var(--green-dark);
+  font-weight: 900;
+}
+
+.drawing-clear {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: var(--green-dark);
+  background: var(--white);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.drawing-clear:hover {
+  color: white;
+  background: var(--green);
+}
+
+#answerCanvas {
+  display: block;
+  width: 100%;
+  height: clamp(150px, 24vh, 260px);
+  border: 1px dashed rgba(27, 127, 95, 0.34);
+  border-radius: 8px;
+  background: white;
+  cursor: crosshair;
+  touch-action: none;
+}
+
 .question-jump {
   margin-top: 20px;
   border: 1px solid var(--line);
@@ -987,6 +1032,10 @@ h1 {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     font-size: 15px;
+  }
+
+  #answerCanvas {
+    height: clamp(150px, 26vh, 240px);
   }
 
   .question-jump-grid {

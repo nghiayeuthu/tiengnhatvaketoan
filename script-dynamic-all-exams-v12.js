@@ -402,6 +402,9 @@ const questionCount = document.querySelector("#questionCount");
 const passage = document.querySelector("#passage");
 const answers = document.querySelector("#answers");
 const feedback = document.querySelector("#feedback");
+const drawingPad = document.querySelector(".answer-drawing-pad");
+const answerCanvas = document.querySelector("#answerCanvas");
+const clearDrawingButton = document.querySelector("#clearDrawing");
 const questionJump = document.querySelector("#questionJump");
 const nextButton = document.querySelector("#nextQuestion");
 const prevButton = document.querySelector("#prevQuestion");
@@ -2544,6 +2547,71 @@ function scrollQuestionIntoView() {
   });
 }
 
+let drawingContext = null;
+let drawingPointerId = null;
+let drawingLastPoint = null;
+
+function setupDrawingCanvas() {
+  if (!answerCanvas) return;
+  const rect = answerCanvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  const ratio = window.devicePixelRatio || 1;
+  answerCanvas.width = Math.round(rect.width * ratio);
+  answerCanvas.height = Math.round(rect.height * ratio);
+  drawingContext = answerCanvas.getContext("2d");
+  drawingContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+  drawingContext.lineCap = "round";
+  drawingContext.lineJoin = "round";
+  drawingContext.lineWidth = 3;
+  drawingContext.strokeStyle = "#17211f";
+}
+
+function clearDrawingCanvas() {
+  if (!answerCanvas || !drawingContext) setupDrawingCanvas();
+  if (!answerCanvas || !drawingContext) return;
+  const rect = answerCanvas.getBoundingClientRect();
+  drawingContext.clearRect(0, 0, rect.width, rect.height);
+}
+
+function pointFromCanvasEvent(event) {
+  const rect = answerCanvas.getBoundingClientRect();
+  return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+}
+
+function startDrawing(event) {
+  if (!answerCanvas) return;
+  if (!drawingContext) setupDrawingCanvas();
+  drawingPointerId = event.pointerId;
+  drawingLastPoint = pointFromCanvasEvent(event);
+  answerCanvas.setPointerCapture?.(event.pointerId);
+}
+
+function drawAnswerStroke(event) {
+  if (!drawingContext || drawingPointerId !== event.pointerId || !drawingLastPoint) return;
+  const point = pointFromCanvasEvent(event);
+  drawingContext.beginPath();
+  drawingContext.moveTo(drawingLastPoint.x, drawingLastPoint.y);
+  drawingContext.lineTo(point.x, point.y);
+  drawingContext.stroke();
+  drawingLastPoint = point;
+}
+
+function stopDrawing(event) {
+  if (drawingPointerId === event.pointerId) {
+    drawingPointerId = null;
+    drawingLastPoint = null;
+  }
+}
+
+function resetDrawingPad() {
+  if (!drawingPad) return;
+  drawingPad.hidden = false;
+  requestAnimationFrame(() => {
+    setupDrawingCanvas();
+    clearDrawingCanvas();
+  });
+}
+
 function renderQuestion() {
   if (state.filter?.startsWith("boki-")) {
     renderFolderDirectory();
@@ -2567,6 +2635,7 @@ function renderQuestion() {
     questionCount.textContent = "0/0";
     passage.hidden = true;
     answers.innerHTML = "";
+    if (drawingPad) drawingPad.hidden = true;
     questionJump.hidden = true;
     questionJump.innerHTML = "";
     feedback.hidden = true;
@@ -2596,6 +2665,7 @@ function renderQuestion() {
 
   const selected = state.selectedByPrompt[current.prompt];
   if (selected !== undefined) revealAnswer(current, selected);
+  resetDrawingPad();
   renderQuestionJump(list);
 }
 
@@ -2615,6 +2685,7 @@ function renderFolderDirectory() {
   feedback.hidden = false;
   feedback.textContent = "Các tab Từ vựng và Ngữ pháp sẽ tự gom câu từ tất cả thư mục đề. Đọc hiểu vẫn nằm trong từng thư mục đề.";
   answers.innerHTML = "";
+  if (drawingPad) drawingPad.hidden = true;
 
   examFolders.forEach((folder) => {
     const button = document.createElement("button");
@@ -3013,6 +3084,13 @@ navLinks.forEach((link) => {
 });
 
 window.addEventListener("hashchange", () => showAppView());
+window.addEventListener("resize", () => resetDrawingPad());
+
+answerCanvas?.addEventListener("pointerdown", startDrawing);
+answerCanvas?.addEventListener("pointermove", drawAnswerStroke);
+answerCanvas?.addEventListener("pointerup", stopDrawing);
+answerCanvas?.addEventListener("pointercancel", stopDrawing);
+clearDrawingButton?.addEventListener("click", clearDrawingCanvas);
 
 function setFilter(filter) {
   filters.forEach((item) => item.classList.toggle("active", item.dataset.filter === filter));
