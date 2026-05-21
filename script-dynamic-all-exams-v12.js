@@ -406,6 +406,8 @@ const drawingPad = document.querySelector(".answer-drawing-pad");
 const drawingOverlay = document.querySelector("#drawingOverlay");
 const openDrawingButton = document.querySelector("#openDrawing");
 const closeDrawingButton = document.querySelector("#closeDrawing");
+const penToolButton = document.querySelector("#penTool");
+const eraserToolButton = document.querySelector("#eraserTool");
 const answerCanvas = document.querySelector("#answerCanvas");
 const clearDrawingButton = document.querySelector("#clearDrawing");
 const questionJump = document.querySelector("#questionJump");
@@ -2555,6 +2557,15 @@ let drawingPointerId = null;
 let drawingLastPoint = null;
 let drawingNeedsClear = true;
 let drawingDirty = false;
+let drawingTool = "pen";
+
+function setDrawingTool(tool) {
+  drawingTool = tool;
+  penToolButton?.classList.toggle("active", tool === "pen");
+  eraserToolButton?.classList.toggle("active", tool === "eraser");
+  penToolButton?.setAttribute("aria-pressed", String(tool === "pen"));
+  eraserToolButton?.setAttribute("aria-pressed", String(tool === "eraser"));
+}
 
 function setupDrawingCanvas() {
   if (!answerCanvas) return;
@@ -2581,8 +2592,6 @@ function setupDrawingCanvas() {
   drawingContext.setTransform(ratio, 0, 0, ratio, 0, 0);
   drawingContext.lineCap = "round";
   drawingContext.lineJoin = "round";
-  drawingContext.lineWidth = 4;
-  drawingContext.strokeStyle = "#17211f";
 }
 
 function clearDrawingCanvas() {
@@ -2613,6 +2622,9 @@ function drawAnswerStroke(event) {
   const events = typeof event.getCoalescedEvents === "function" ? event.getCoalescedEvents() : [event];
   events.forEach((item) => {
     const point = pointFromCanvasEvent(item);
+    drawingContext.globalCompositeOperation = drawingTool === "eraser" ? "destination-out" : "source-over";
+    drawingContext.lineWidth = drawingTool === "eraser" ? 64 : 4;
+    drawingContext.strokeStyle = drawingTool === "eraser" ? "rgba(0, 0, 0, 1)" : "#17211f";
     drawingContext.beginPath();
     drawingContext.moveTo(drawingLastPoint.x, drawingLastPoint.y);
     drawingContext.lineTo(point.x, point.y);
@@ -3152,6 +3164,8 @@ window.addEventListener("resize", () => {
 
 openDrawingButton?.addEventListener("click", openDrawingPad);
 closeDrawingButton?.addEventListener("click", closeDrawingPad);
+penToolButton?.addEventListener("click", () => setDrawingTool("pen"));
+eraserToolButton?.addEventListener("click", () => setDrawingTool("eraser"));
 answerCanvas?.addEventListener("pointerdown", startDrawing);
 answerCanvas?.addEventListener("pointermove", drawAnswerStroke);
 answerCanvas?.addEventListener("pointerrawupdate", drawAnswerStroke);
@@ -3164,7 +3178,7 @@ answerCanvas?.addEventListener("touchmove", preventDrawingGesture, { passive: fa
 answerCanvas?.addEventListener("touchend", preventDrawingGesture, { passive: false });
 document.addEventListener("selectionchange", clearSelectionWhileDrawing);
 clearDrawingButton?.addEventListener("click", clearDrawingCanvas);
-[drawingPad, drawingOverlay, answerCanvas, openDrawingButton, closeDrawingButton, clearDrawingButton, prevButton, nextButton, document.querySelector("#practice .quiz-actions")].forEach((element) => {
+[drawingPad, drawingOverlay, answerCanvas, openDrawingButton, closeDrawingButton, penToolButton, eraserToolButton, clearDrawingButton, prevButton, nextButton, document.querySelector("#practice .quiz-actions")].forEach((element) => {
   element?.addEventListener("selectstart", (event) => event.preventDefault());
   element?.addEventListener("contextmenu", (event) => event.preventDefault());
   element?.addEventListener("dragstart", (event) => event.preventDefault());

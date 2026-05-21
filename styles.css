@@ -772,6 +772,7 @@ h1 {
   gap: 8px;
 }
 
+.drawing-tool,
 .drawing-clear,
 .drawing-close {
   min-height: 34px;
@@ -788,6 +789,13 @@ h1 {
   -webkit-user-select: none;
 }
 
+.drawing-tool.active {
+  color: white;
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.drawing-tool:not(.active):hover,
 .drawing-clear:hover,
 .drawing-close:hover,
 .drawing-open:hover {

@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=24" />
+    <link rel="stylesheet" href="styles.css?v=25" />
   </head>
   <body class="locked">
     <section class="auth-gate" id="authGate" aria-labelledby="authTitle">
@@ -95,6 +95,8 @@
                 <div class="drawing-pad-top">
                   <strong>Nháp đáp án</strong>
                   <div class="drawing-actions">
+                    <button class="drawing-tool active" id="penTool" type="button" aria-pressed="true">Bút</button>
+                    <button class="drawing-tool" id="eraserTool" type="button" aria-pressed="false">Tẩy</button>
                     <button class="drawing-clear" id="clearDrawing" type="button">Xóa</button>
                     <button class="drawing-close" id="closeDrawing" type="button">Đóng</button>
                   </div>
@@ -145,6 +147,6 @@
 
     <script src="n1-vocabulary-extra.js?v=6"></script>
     <script src="n1-grammar-extra.js?v=1"></script>
-    <script src="script-dynamic-all-exams-v12.js?v=79"></script>
+    <script src="script-dynamic-all-exams-v12.js?v=81"></script>
   </body>
 </html>
