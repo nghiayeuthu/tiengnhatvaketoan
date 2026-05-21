@@ -805,6 +805,9 @@ h1 {
   line-height: 1.1;
   text-orientation: mixed;
   writing-mode: vertical-rl;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
 }
 
 #practice .question-jump.is-collapsed .question-jump-toggle {
