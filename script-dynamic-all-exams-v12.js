@@ -2554,8 +2554,7 @@ let drawingContext = null;
 let drawingPointerId = null;
 let drawingLastPoint = null;
 let drawingNeedsClear = true;
-let drawingCanvasWidth = 0;
-let drawingCanvasHeight = 0;
+let drawingDirty = false;
 
 function setupDrawingCanvas() {
   if (!answerCanvas) return;
@@ -2565,12 +2564,20 @@ function setupDrawingCanvas() {
   const nextWidth = Math.round(rect.width * ratio);
   const nextHeight = Math.round(rect.height * ratio);
   if (answerCanvas.width !== nextWidth || answerCanvas.height !== nextHeight) {
+    let previousImage = null;
+    if (drawingDirty && answerCanvas.width && answerCanvas.height) {
+      previousImage = document.createElement("canvas");
+      previousImage.width = answerCanvas.width;
+      previousImage.height = answerCanvas.height;
+      previousImage.getContext("2d").drawImage(answerCanvas, 0, 0);
+    }
     answerCanvas.width = nextWidth;
     answerCanvas.height = nextHeight;
-    drawingCanvasWidth = nextWidth;
-    drawingCanvasHeight = nextHeight;
+    drawingContext = answerCanvas.getContext("2d");
+    if (previousImage) drawingContext.drawImage(previousImage, 0, 0, nextWidth, nextHeight);
+  } else {
+    drawingContext = answerCanvas.getContext("2d");
   }
-  drawingContext = answerCanvas.getContext("2d");
   drawingContext.setTransform(ratio, 0, 0, ratio, 0, 0);
   drawingContext.lineCap = "round";
   drawingContext.lineJoin = "round";
@@ -2583,6 +2590,7 @@ function clearDrawingCanvas() {
   const rect = answerCanvas.getBoundingClientRect();
   drawingContext.clearRect(0, 0, rect.width, rect.height);
   drawingNeedsClear = false;
+  drawingDirty = false;
 }
 
 function pointFromCanvasEvent(event) {
@@ -2610,6 +2618,7 @@ function drawAnswerStroke(event) {
     drawingContext.lineTo(point.x, point.y);
     drawingContext.stroke();
     drawingLastPoint = point;
+    drawingDirty = true;
   });
 }
 
@@ -2624,7 +2633,6 @@ function stopDrawing(event) {
 function resetDrawingPad() {
   if (!drawingPad) return;
   drawingPad.hidden = false;
-  drawingNeedsClear = true;
   closeDrawingPad();
 }
 
@@ -2660,8 +2668,10 @@ function renderQuestion() {
   if (folderBackFilter) folderBackFilter.hidden = false;
   prevButton.hidden = false;
   nextButton.hidden = false;
+  if (openDrawingButton) openDrawingButton.hidden = false;
   prevButton.style.display = "";
   nextButton.style.display = "";
+  if (openDrawingButton) openDrawingButton.style.display = "";
   const list = activeQuestions();
   if (!list.length) {
     questionType.textContent = state.loading ? "Đang tải" : "Chưa có câu hỏi";
@@ -2670,6 +2680,7 @@ function renderQuestion() {
     passage.hidden = true;
     answers.innerHTML = "";
     if (drawingPad) drawingPad.hidden = true;
+    if (openDrawingButton) openDrawingButton.hidden = true;
     questionJump.hidden = true;
     questionJump.innerHTML = "";
     feedback.hidden = true;
@@ -2707,8 +2718,10 @@ function renderFolderDirectory() {
   if (folderBackFilter) folderBackFilter.hidden = true;
   prevButton.hidden = true;
   nextButton.hidden = true;
+  if (openDrawingButton) openDrawingButton.hidden = true;
   prevButton.style.display = "none";
   nextButton.style.display = "none";
+  if (openDrawingButton) openDrawingButton.style.display = "none";
   questionType.textContent = "Thư mục đề";
   questionText.textContent = state.loading ? "Đang tải thêm thư mục đề..." : "Chọn thư mục để luyện đề";
   questionCount.textContent = `${examFolders.length} thư mục`;
