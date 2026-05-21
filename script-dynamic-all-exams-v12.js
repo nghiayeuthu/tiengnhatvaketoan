@@ -2550,6 +2550,7 @@ function scrollQuestionIntoView() {
 let drawingContext = null;
 let drawingPointerId = null;
 let drawingLastPoint = null;
+let drawingSavedImage = null;
 
 function setupDrawingCanvas() {
   if (!answerCanvas) return;
@@ -2562,8 +2563,13 @@ function setupDrawingCanvas() {
   drawingContext.setTransform(ratio, 0, 0, ratio, 0, 0);
   drawingContext.lineCap = "round";
   drawingContext.lineJoin = "round";
-  drawingContext.lineWidth = 3;
+  drawingContext.lineWidth = 4;
   drawingContext.strokeStyle = "#17211f";
+  if (drawingSavedImage) {
+    const image = new Image();
+    image.onload = () => drawingContext.drawImage(image, 0, 0, rect.width, rect.height);
+    image.src = drawingSavedImage;
+  }
 }
 
 function clearDrawingCanvas() {
@@ -2571,6 +2577,7 @@ function clearDrawingCanvas() {
   if (!answerCanvas || !drawingContext) return;
   const rect = answerCanvas.getBoundingClientRect();
   drawingContext.clearRect(0, 0, rect.width, rect.height);
+  drawingSavedImage = null;
 }
 
 function pointFromCanvasEvent(event) {
@@ -2580,6 +2587,7 @@ function pointFromCanvasEvent(event) {
 
 function startDrawing(event) {
   if (!answerCanvas) return;
+  event.preventDefault();
   if (!drawingContext) setupDrawingCanvas();
   drawingPointerId = event.pointerId;
   drawingLastPoint = pointFromCanvasEvent(event);
@@ -2588,16 +2596,22 @@ function startDrawing(event) {
 
 function drawAnswerStroke(event) {
   if (!drawingContext || drawingPointerId !== event.pointerId || !drawingLastPoint) return;
-  const point = pointFromCanvasEvent(event);
-  drawingContext.beginPath();
-  drawingContext.moveTo(drawingLastPoint.x, drawingLastPoint.y);
-  drawingContext.lineTo(point.x, point.y);
-  drawingContext.stroke();
-  drawingLastPoint = point;
+  event.preventDefault();
+  const events = typeof event.getCoalescedEvents === "function" ? event.getCoalescedEvents() : [event];
+  events.forEach((item) => {
+    const point = pointFromCanvasEvent(item);
+    drawingContext.beginPath();
+    drawingContext.moveTo(drawingLastPoint.x, drawingLastPoint.y);
+    drawingContext.lineTo(point.x, point.y);
+    drawingContext.stroke();
+    drawingLastPoint = point;
+  });
 }
 
 function stopDrawing(event) {
   if (drawingPointerId === event.pointerId) {
+    event.preventDefault();
+    if (answerCanvas) drawingSavedImage = answerCanvas.toDataURL("image/png");
     drawingPointerId = null;
     drawingLastPoint = null;
   }
@@ -3094,6 +3108,8 @@ answerCanvas?.addEventListener("pointerdown", startDrawing);
 answerCanvas?.addEventListener("pointermove", drawAnswerStroke);
 answerCanvas?.addEventListener("pointerup", stopDrawing);
 answerCanvas?.addEventListener("pointercancel", stopDrawing);
+answerCanvas?.addEventListener("pointerleave", stopDrawing);
+answerCanvas?.addEventListener("lostpointercapture", stopDrawing);
 clearDrawingButton?.addEventListener("click", clearDrawingCanvas);
 [drawingPad, answerCanvas, clearDrawingButton, prevButton, nextButton, document.querySelector("#practice .quiz-actions")].forEach((element) => {
   element?.addEventListener("selectstart", (event) => event.preventDefault());
