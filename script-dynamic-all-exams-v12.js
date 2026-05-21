@@ -703,6 +703,10 @@ const supplementalVocabAnswers = [
   ["勝手", "かって", "tự tiện, theo ý mình; hoàn cảnh/tiện lợi tùy ngữ cảnh"],
   ["身勝手", "みがって", "ích kỷ, chỉ nghĩ cho bản thân"],
   ["込む", "こむ", "đông đúc; đi vào/đưa vào trong; làm kỹ, dồn vào"],
+  ["プラス", "プラス", "cộng thêm, điểm cộng, lợi thế"],
+  ["アップ", "アップ", "tăng lên, nâng lên"],
+  ["リード", "リード", "dẫn trước, dẫn đầu; 1点リードする = dẫn trước 1 điểm"],
+  ["キャッチ", "キャッチ", "bắt lấy, nắm bắt"],
   ["自前", "じまえ", "tự mình chuẩn bị, đồ/cái của mình"],
   ["自分", "じぶん", "bản thân, tự mình"],
   ["買う", "かう", "mua"],
@@ -1470,7 +1474,6 @@ function isUsefulStudyEntry(word, reading, meaning) {
   if (/[\u3400-\u9fff]/u.test(source) && /[\u3400-\u9fff]/u.test(readingText)) return false;
   if (["かない", "ュー", "ンする", "ング"].includes(source)) return false;
   if (/^[ンー]/u.test(source)) return false;
-  if (/^[ァ-ンー]+(?:する)?$/u.test(source) && source.length <= 4) return false;
   if (source === "買う" && note.includes("bác")) return false;
   if (source === "込む" && readingText !== "こむ") return false;
   if (source === "勝手" && note.includes("nhà bếp")) return false;
@@ -1614,7 +1617,7 @@ function termMeaning(term) {
 
 function answerMeaningLine(term) {
   const entry = lookupVocabAnswer(term);
-  if (!entry) return `Đáp án đúng: 「${term}」. Chưa có nghĩa tiếng Việt trong từ điển, cần bổ sung.`;
+  if (!entry) return `Đáp án đúng: 「${term}」.`;
   const baseNote = entry.base !== term ? `, gốc: ${entry.base}` : "";
   const hanViet = hanVietForText(entry.base);
   const pronunciation = [entry.reading && entry.reading !== term && entry.reading !== entry.base ? entry.reading : "", hanViet].filter(Boolean).join(", ");
@@ -1907,7 +1910,7 @@ function addKanjiReadingNotesToExplanation(question) {
   if (!question.explanation || question.explanation.includes("Cách đọc kanji trong câu:")) return;
   const entries = readingEntriesForQuestionText(question);
   if (!entries.length) return;
-  question.explanation += `\nCách đọc kanji trong câu: ${entries.map((entry) => `${entry.word}（${entry.reading}）`).join("; ")}.`;
+  question.explanation += `\nCách đọc kanji trong câu: ${entries.map((entry) => vocabNoteText(entry.word, entry.reading, entry.meaning)).join("; ")}.`;
 }
 
 function withStudyNotes(baseExplanation, item, group = null) {
