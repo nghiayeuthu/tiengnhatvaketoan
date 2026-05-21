@@ -3091,7 +3091,7 @@ answerCanvas?.addEventListener("pointermove", drawAnswerStroke);
 answerCanvas?.addEventListener("pointerup", stopDrawing);
 answerCanvas?.addEventListener("pointercancel", stopDrawing);
 clearDrawingButton?.addEventListener("click", clearDrawingCanvas);
-[drawingPad, answerCanvas, clearDrawingButton].forEach((element) => {
+[drawingPad, answerCanvas, clearDrawingButton, prevButton, nextButton, document.querySelector("#practice .quiz-actions")].forEach((element) => {
   element?.addEventListener("selectstart", (event) => event.preventDefault());
   element?.addEventListener("contextmenu", (event) => event.preventDefault());
   element?.addEventListener("dragstart", (event) => event.preventDefault());

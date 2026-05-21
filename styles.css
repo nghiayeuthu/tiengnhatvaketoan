@@ -185,6 +185,12 @@ a {
   font: inherit;
 }
 
+button {
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -353,6 +359,9 @@ h1 {
   box-shadow: 0 14px 34px rgba(23, 33, 31, 0.16);
   transform: translateX(-50%);
   backdrop-filter: blur(14px);
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
 }
 
 .primary-button,
@@ -618,6 +627,7 @@ h1 {
   line-height: 1.6;
   user-select: text;
   -webkit-user-select: text;
+  -webkit-touch-callout: default;
   white-space: pre-wrap;
 }
 
