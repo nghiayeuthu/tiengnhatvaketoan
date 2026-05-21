@@ -810,6 +810,17 @@ h1 {
   -webkit-user-select: none;
 }
 
+#practice .question-jump-toggle::before,
+#prevQuestion::before,
+#nextQuestion::before,
+#bokiPrevQuestion::before,
+#bokiNextQuestion::before {
+  content: attr(data-label);
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
 #practice .question-jump.is-collapsed .question-jump-toggle {
   position: static;
   box-shadow: 0 10px 24px rgba(23, 33, 31, 0.12);

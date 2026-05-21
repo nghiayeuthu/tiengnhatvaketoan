@@ -2882,7 +2882,8 @@ function renderQuestionJump(list) {
   const toggle = document.createElement("button");
   toggle.className = "question-jump-toggle";
   toggle.type = "button";
-  toggle.textContent = state.questionJumpOpen ? "Ẩn" : "Chọn Câu";
+  toggle.dataset.label = state.questionJumpOpen ? "Ẩn" : "Chọn Câu";
+  toggle.setAttribute("aria-label", toggle.dataset.label);
   toggle.setAttribute("aria-expanded", String(state.questionJumpOpen));
   ["selectstart", "contextmenu", "dragstart"].forEach((eventName) => {
     toggle.addEventListener(eventName, (event) => event.preventDefault());
