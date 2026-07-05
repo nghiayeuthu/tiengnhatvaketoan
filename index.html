@@ -2,15 +2,21 @@
 <html lang="vi">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1b7f5f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="N1/N2 & Boki" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>TiengNhatVaKeToan - Học tiếng Nhật và kế toán</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=25" />
+    <link rel="stylesheet" href="styles.css?v=27" />
   </head>
   <body class="locked">
     <section class="auth-gate" id="authGate" aria-labelledby="authTitle">
@@ -55,7 +61,7 @@
         </span>
       </a>
       <nav class="nav" aria-label="Điều hướng chính">
-        <a href="#practice">Luyện đề N1</a>
+        <a href="#practice">Luyện đề N1/N2</a>
         <a href="#boki">Boki 3級</a>
         <a href="#deck">Flashcards</a>
       </nav>
@@ -71,8 +77,11 @@
         <div class="section-heading">
           <p class="eyebrow">Practice</p>
           <div class="filters" role="group" aria-label="Chọn kỹ năng">
+            <button class="filter level-filter active" type="button" data-level="N1">N1</button>
+            <button class="filter level-filter" type="button" data-level="N2">N2</button>
             <button class="filter" type="button" data-filter="vocab">Từ vựng</button>
             <button class="filter" type="button" data-filter="grammar">Ngữ pháp</button>
+            <button class="filter" type="button" data-filter="reading">Đọc hiểu</button>
           </div>
         </div>
 
@@ -147,6 +156,6 @@
 
     <script src="n1-vocabulary-extra.js?v=6"></script>
     <script src="n1-grammar-extra.js?v=1"></script>
-    <script src="script-dynamic-all-exams-v12.js?v=81"></script>
+    <script src="script-dynamic-all-exams-v12.js?v=85"></script>
   </body>
 </html>

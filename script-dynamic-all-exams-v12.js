@@ -4,6 +4,8 @@ const sitePasswordHash = "69ba727f4ea30163a7d6b2a9045da29cdfd1671ec6cb0f8375bdd6
 const hanVietSourceUrl = "https://dahlia.github.io/unihan-json/12.1.0/kVietnamese.json";
 let hanVietMap = {};
 let appDataReady = false;
+const loadedLevels = new Set();
+const loadingLevels = new Map();
 
 async function sha256Hex(value) {
   const bytes = new TextEncoder().encode(value);
@@ -89,6 +91,12 @@ function setupAuthGate() {
 setupAuthGate();
 updateExamCountdown();
 
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch((error) => console.warn("Service worker registration failed", error));
+  });
+}
+
 function q(type, label, prompt, options, answer, explanation, passageText = "", htmlPrompt = "", meta = {}) {
   return {
     type,
@@ -113,74 +121,51 @@ function skillFromLabel(label) {
 }
 
 
-const examDataVersion = 5;
-const remoteExams = [
-  { path: "exam-202512.json", id: "exam-2025-12", title: "2025 tháng 12" },
-  { path: "exam-202507.json", id: "exam-2025-07", title: "2025 tháng 7" },
-  { path: "exam-202412.json", id: "exam-2024-12", title: "2024 tháng 12" },
-  { path: "exam-202407.json", id: "exam-2024-07", title: "2024 tháng 7" },
-  { path: "exam-202312.json", id: "exam-2023-12", title: "2023 tháng 12" },
-  { path: "exam-202307.json", id: "exam-2023-07", title: "2023 tháng 7" },
-  { path: "exam-202212.json", id: "exam-2022-12", title: "2022 tháng 12" },
-  { path: "exam-202207.json", id: "exam-2022-07", title: "2022 tháng 7" },
-  { path: "exam-202112.json", id: "exam-2021-12", title: "2021 tháng 12" },
-  { path: "exam-202107.json", id: "exam-2021-07", title: "2021 tháng 7" },
-  { path: "exam-202012.json", id: "exam-2020-12", title: "2020 tháng 12" },
-  { path: "exam-201912.json", id: "exam-2019-12", title: "2019 tháng 12" },
-  { path: "exam-201907.json", id: "exam-2019-07", title: "2019 tháng 7" },
-  { path: "exam-201812.json", id: "exam-2018-12", title: "2018 tháng 12" },
-  { path: "exam-201807.json", id: "exam-2018-07", title: "2018 tháng 7" },
-  { path: "exam-201712.json", id: "exam-2017-12", title: "2017 tháng 12" },
-  { path: "exam-201707.json", id: "exam-2017-07", title: "2017 tháng 7" },
-  { path: "exam-201612.json", id: "exam-2016-12", title: "2016 tháng 12" },
-  { path: "exam-201607.json", id: "exam-2016-07", title: "2016 tháng 7" },
-  { path: "exam-201512.json", id: "exam-2015-12", title: "2015 tháng 12" },
-  { path: "exam-201507.json", id: "exam-2015-07", title: "2015 tháng 7" },
-  { path: "exam-201412.json", id: "exam-2014-12", title: "2014 tháng 12" },
-  { path: "exam-201407.json", id: "exam-2014-07", title: "2014 tháng 7" },
-  { path: "exam-201312.json", id: "exam-2013-12", title: "2013 tháng 12" },
-  { path: "exam-201307.json", id: "exam-2013-07", title: "2013 tháng 7" },
-  { path: "exam-201212.json", id: "exam-2012-12", title: "2012 tháng 12" },
-  { path: "exam-201207.json", id: "exam-2012-07", title: "2012 tháng 7" },
-  { path: "exam-201112.json", id: "exam-2011-12", title: "2011 tháng 12" },
-  { path: "exam-201107.json", id: "exam-2011-07", title: "2011 tháng 7" },
-  { path: "exam-201012.json", id: "exam-2010-12", title: "2010 tháng 12" },
-  { path: "exam-201007.json", id: "exam-2010-07", title: "2010 tháng 7" },
+const examDataVersion = 7;
+const n1ExamPeriods = [
+  "202607", "202512", "202507", "202412", "202407", "202312", "202307", "202212", "202207",
+  "202112", "202107", "202012", "201912", "201907", "201812", "201807", "201712",
+  "201707", "201612", "201607", "201512", "201507", "201412", "201407", "201312",
+  "201307", "201212", "201207", "201112", "201107", "201012", "201007",
 ];
 
-const examFolders = [
-  { id: "exam-2025-12", title: "2025 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2025-07", title: "2025 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2024-12", title: "2024 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2024-07", title: "2024 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2023-12", title: "2023 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2023-07", title: "2023 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2022-12", title: "2022 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2022-07", title: "2022 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2021-12", title: "2021 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2021-07", title: "2021 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2020-12", title: "2020 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2019-12", title: "2019 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2019-07", title: "2019 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2018-12", title: "2018 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2018-07", title: "2018 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2017-12", title: "2017 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2017-07", title: "2017 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2016-12", title: "2016 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2016-07", title: "2016 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2015-12", title: "2015 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2015-07", title: "2015 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2014-12", title: "2014 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2014-07", title: "2014 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2013-12", title: "2013 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2013-07", title: "2013 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2012-12", title: "2012 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2012-07", title: "2012 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2011-12", title: "2011 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2011-07", title: "2011 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2010-12", title: "2010 tháng 12", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
-  { id: "exam-2010-07", title: "2010 tháng 7", subtitle: "Đề JLPT N1 - 文字・語彙, 文法, 読解" },
+const n2ExamPeriods = [
+  "202512", "202507", "202412", "202407", "202312", "202307", "202212", "202207",
+  "202112", "202107", "202012", "201912", "201907", "201812", "201807", "201712",
+  "201707", "201612", "201607", "201512", "201507", "201412", "201407", "201312",
+  "201307", "201212", "201207", "201112", "201107", "201012", "201007",
 ];
+
+const examPeriodsByLevel = { N1: n1ExamPeriods, N2: n2ExamPeriods };
+
+function examTitleFromDate(date) {
+  return `${date.slice(0, 4)} tháng ${Number(date.slice(4, 6))}`;
+}
+
+function examIdFromDate(level, date) {
+  const year = date.slice(0, 4);
+  const month = date.slice(4, 6);
+  return level === "N1" ? `exam-${year}-${month}` : `exam-${level.toLowerCase()}-${year}-${month}`;
+}
+
+function examPathFromDate(level, date) {
+  return level === "N1" ? `exam-${date}.json` : `exam-${level.toLowerCase()}-${date}.json`;
+}
+
+const remoteExams = Object.entries(examPeriodsByLevel).flatMap(([level, periods]) => periods.map((date) => ({
+  level,
+  date,
+  path: examPathFromDate(level, date),
+  id: examIdFromDate(level, date),
+  title: examTitleFromDate(date),
+})));
+
+const examFolders = remoteExams.map((exam) => ({
+  id: exam.id,
+  level: exam.level,
+  title: `${exam.level} ${exam.title}`,
+  subtitle: `Đề JLPT ${exam.level} - 文字・語彙, 文法, 読解`,
+}));
 
 
 const state = {
@@ -191,6 +176,7 @@ const state = {
   streak: Number(localStorage.getItem("n1Streak") || 0),
   selectedByPrompt: JSON.parse(localStorage.getItem("n1Selections") || "{}"),
   loading: true,
+  level: localStorage.getItem("jlptLevel") || "N1",
   deckType: "vocab",
   deckIndex: 0,
   deckOpen: false,
@@ -414,6 +400,7 @@ const questionJump = document.querySelector("#questionJump");
 const nextButton = document.querySelector("#nextQuestion");
 const prevButton = document.querySelector("#prevQuestion");
 const filters = document.querySelectorAll(".filter[data-filter]");
+const levelFilters = document.querySelectorAll(".level-filter[data-level]");
 const folderBackFilter = document.querySelector("#folderBackFilter");
 const deckGrid = document.querySelector("#deckGrid");
 const quizShell = document.querySelector(".quiz-shell");
@@ -1451,7 +1438,11 @@ const n1GrammarPatterns = Array.isArray(window.n1GrammarExtra) ? window.n1Gramma
 grammarPatterns.push(...n1GrammarPatterns);
 const sortedN1GrammarPatterns = [...n1GrammarPatterns].sort((a, b) => String(b[0]).length - String(a[0]).length);
 
-function labelFor(title, questionNumber) {
+function labelFor(exam, section, questionNumber) {
+  const title = `${exam.level || "N1"} ${exam.title}`;
+  if (section?.type === "vocabulary") return `${title} - Từ vựng`;
+  if (section?.type === "grammar") return `${title} - Ngữ pháp`;
+  if (section?.type === "reading") return `${title} - Đọc hiểu`;
   if (questionNumber <= 25) return `${title} - Từ vựng`;
   if (questionNumber <= 40) return `${title} - Ngữ pháp`;
   if (questionNumber <= 44) return `${title} - Ngữ pháp đoạn văn`;
@@ -1999,13 +1990,38 @@ function readingExplanationForLocalQuestion(question) {
   return `Đáp án: ${question.answer + 1}. Ý đúng là 「${correctText}」.${evidence}${originalNote}`;
 }
 
-function explanationForRemoteQuestion(exam, item, group) {
+function explanationForRemoteQuestion(exam, item, group, section = null) {
   const questionNumber = Number(item.questionNumber);
   const correctIndex = Number(item.correctAnswer) - 1;
   const correctText = item.options[correctIndex];
-  const prompt = item.text.replace(/\[\[blank\]\]/g, "（　）");
+  const prompt = String(item.text || item.prompt || item.question || "").replace(/\[\[blank\]\]/g, "（　）");
   const original = meaningfulRemoteExplanation(item.explanation);
   let base = "";
+
+  if (section?.type === "reading") {
+    base = readingExplanationForRemoteQuestion(item, group);
+    return withStudyNotes(base, item, group);
+  }
+
+  if (section?.type === "vocabulary" && exam.level === "N2") {
+    if (questionNumber <= 5) {
+      const target = remoteTargetWord(item);
+      const targetNote = target ? ` Từ được hỏi: ${meaningfulRemoteExplanation(item.explanation) || termMeaning(target)}.` : "";
+      base = `Đáp án: ${item.correctAnswer}.${targetNote || ` ${answerMeaningLine(correctText)}`}`;
+      return withStudyNotes(base, item, group);
+    }
+    if (original) return withStudyNotes(`Đáp án: ${item.correctAnswer}. ${original}`, item, group);
+    base = `Đáp án: ${item.correctAnswer}. ${answerMeaningLine(correctText)}${optionMeanings(item)}`;
+    return withStudyNotes(base, item, group);
+  }
+
+  if (section?.type === "grammar" && exam.level === "N2") {
+    if (original) return withStudyNotes(`Đáp án: ${item.correctAnswer}. ${original}`, item, group);
+    const fullOrder = item.starOrder || item.correctOrder || item.fullOrder || item.order || "";
+    const orderNote = fullOrder ? ` 正しい順序: ${Array.isArray(fullOrder) ? fullOrder.join(" ") : fullOrder}.` : "";
+    base = `Đáp án: ${item.correctAnswer}.${orderNote} ${grammarAnswerLine(correctText)}${grammarOptionNotes(item)}`.trim();
+    return withStudyNotes(base, item, group);
+  }
 
   if (questionNumber <= 6) {
     const target = kanjiTargets[exam.id]?.[questionNumber - 1] || remoteTargetWord(item);
@@ -2081,12 +2097,21 @@ function grammarMarkers(number) {
 }
 
 function sourceMarkupToHtml(value) {
-  return escapeHtml(value)
+  return escapeHtml(String(value || ""))
     .replace(/\[\[blank\]\]/g, "（　）")
     .replace(/\[\[br\]\]/g, "<br>")
     .replace(/\[\[u\]\]/g, '<span class="kanji-target">')
     .replace(/\[\[\/u\]\]/g, "</span>")
-    .replace(/\[\[\/?b\]\]/g, "")
+    .replace(/\[\[b\]\]/g, "<strong>")
+    .replace(/\[\[\/b\]\]/g, "</strong>")
+    .replace(/\[\[table\]\]/g, '<span class="inline-table">')
+    .replace(/\[\[\/table\]\]/g, "</span>")
+    .replace(/\[\[tr\]\]/g, '<span class="inline-table-row">')
+    .replace(/\[\[\/tr\]\]/g, "</span>")
+    .replace(/\[\[th\]\]/g, '<span class="inline-table-cell">')
+    .replace(/\[\[\/th\]\]/g, "</span>")
+    .replace(/\[\[td\]\]/g, '<span class="inline-table-cell">')
+    .replace(/\[\[\/td\]\]/g, "</span>")
     .replace(/\[\[\/?center\]\]/g, "")
     .replace(/\[\[\/?h4\]\]/g, "");
 }
@@ -2110,21 +2135,28 @@ function convertRemoteExam(exam, data) {
   data.sections.forEach((section) => {
     section.groups.forEach((group) => {
       group.questions.forEach((item) => {
-        const questionNumber = Number(item.questionNumber);
-        const promptText = item.text.replace(/\[\[blank\]\]/g, "（　）");
-        const promptMarkup = item.textHtml ? `${questionNumber}. ${sourceMarkupToHtml(item.textHtml)}` : "";
+        const questionNumber = Number(item.questionNumber || item.id || converted.length + 1);
+        const sourceText = String(item.text || item.prompt || item.question || item.textHtml || "");
+        const promptText = sourceMarkupToText(sourceText) || sourceText.replace(/\[\[blank\]\]/g, "（　）");
+        const htmlSource = item.textHtml || (/\[\[[^\]]+\]\]/.test(sourceText) ? sourceText : "");
+        const promptMarkup = htmlSource ? `${questionNumber}. ${sourceMarkupToHtml(htmlSource)}` : "";
+        const passageText = item.passage || group.passage || "";
+        const shouldShowPassage = section.type === "reading" || (section.type === "grammar" && passageText) || questionNumber >= 41;
         converted.push(q(
           exam.id,
-          labelFor(exam.title, questionNumber),
+          labelFor(exam, section, questionNumber),
           `${questionNumber}. ${promptText}`,
           item.options,
           Number(item.correctAnswer) - 1,
-          explanationForRemoteQuestion(exam, item, group),
-          questionNumber >= 41 ? item.passage || group.passage || "" : "",
+          explanationForRemoteQuestion(exam, item, group, section),
+          shouldShowPassage ? passageText : "",
           promptMarkup,
           {
+            examLevel: data.level || exam.level || "N1",
+            sectionType: section.type || "",
+            instruction: group.instruction || "",
             starOrder: item.starOrder || item.correctOrder || item.fullOrder || item.order || "",
-            readingTarget: questionNumber >= 45 ? underlinedSourceText(item.textHtml) : "",
+            readingTarget: section.type === "reading" ? underlinedSourceText(item.textHtml || item.text || "") : "",
           }
         ));
       });
@@ -2369,24 +2401,46 @@ async function loadHanVietMap() {
   }
 }
 
-async function loadRemoteExams() {
-  const remoteLoaded = await Promise.allSettled(remoteExams.map(async (exam) => {
+async function loadRemoteExams(level = state.level) {
+  if (loadedLevels.has(level)) return;
+  if (loadingLevels.has(level)) return loadingLevels.get(level);
+
+  const loadPromise = Promise.allSettled(remoteExams.filter((exam) => exam.level === level).map(async (exam) => {
     const response = await fetch(`${exam.path}?v=${examDataVersion}`);
     if (!response.ok) throw new Error(`Không tải được đề ${exam.title}`);
     const data = await response.json();
     return convertRemoteExam(exam, data);
-  }));
-  remoteLoaded.forEach((item) => {
-    if (item.status === "fulfilled") {
-      questions.push(...item.value);
-    } else {
-      console.warn(item.reason);
-    }
+  })).then((remoteLoaded) => {
+    const loadedQuestions = [];
+    remoteLoaded.forEach((item) => {
+      if (item.status === "fulfilled") {
+        loadedQuestions.push(...item.value);
+      } else {
+        console.warn(item.reason);
+      }
+    });
+
+    applyKanjiTargets(loadedQuestions);
+    enhanceQuestions(loadedQuestions);
+    questions.push(...loadedQuestions);
+    loadedLevels.add(level);
+  }).finally(() => {
+    loadingLevels.delete(level);
   });
 
+  loadingLevels.set(level, loadPromise);
+  return loadPromise;
+}
 
-  applyKanjiTargets(questions);
-  enhanceQuestions(questions);
+async function ensureCurrentLevelLoaded() {
+  if (loadedLevels.has(state.level)) return;
+  state.loading = true;
+  renderQuestion();
+  renderDeck();
+  await loadRemoteExams(state.level);
+  state.loading = false;
+  renderQuestion();
+  renderDeck();
 }
 
 
@@ -2394,8 +2448,12 @@ function activeQuestions() {
   if (state.filter === "all") return [];
   if (state.filter === "boki-all") return [];
   if (state.filter.startsWith("exam-") || state.filter.startsWith("boki-")) return questions.filter((item) => item.type === state.filter);
-  const folderQuestions = questions.filter((item) => item.folder);
+  const folderQuestions = questions.filter((item) => item.folder && item.examLevel === state.level);
   return folderQuestions.filter((item) => item.skill === state.filter);
+}
+
+function activeExamFolders() {
+  return examFolders.filter((folder) => folder.level === state.level);
 }
 
 function questionNumber(question) {
@@ -2745,9 +2803,10 @@ function renderFolderDirectory() {
   prevButton.style.display = "none";
   nextButton.style.display = "none";
   if (openDrawingButton) openDrawingButton.style.display = "none";
-  questionType.textContent = "Thư mục đề";
+  const folders = activeExamFolders();
+  questionType.textContent = `Thư mục đề ${state.level}`;
   questionText.textContent = state.loading ? "Đang tải thêm thư mục đề..." : "Chọn thư mục để luyện đề";
-  questionCount.textContent = `${examFolders.length} thư mục`;
+  questionCount.textContent = `${folders.length} thư mục`;
   passage.hidden = true;
   passage.textContent = "";
   questionJump.hidden = true;
@@ -2757,7 +2816,7 @@ function renderFolderDirectory() {
   answers.innerHTML = "";
   if (drawingPad) drawingPad.hidden = true;
 
-  examFolders.forEach((folder) => {
+  folders.forEach((folder) => {
     const button = document.createElement("button");
     button.className = "answer folder-card";
     button.type = "button";
@@ -3043,7 +3102,7 @@ function folderTitle(folderId) {
 
 function flashcardsFromFolders(skill = state.deckType) {
   return questions
-    .filter((question) => question.folder && question.skill === skill)
+    .filter((question) => question.folder && question.examLevel === state.level && question.skill === skill)
     .map((question) => {
       const answer = question.options[question.answer];
       const vocabEntry = skill === "vocab" ? lookupVocabAnswer(answer) : null;
@@ -3148,6 +3207,10 @@ filters.forEach((button) => {
   button.addEventListener("click", () => setFilter(button.dataset.filter));
 });
 
+levelFilters.forEach((button) => {
+  button.addEventListener("click", () => setLevel(button.dataset.level));
+});
+
 folderBackFilter?.addEventListener("click", () => setFilter("all"));
 
 navLinks.forEach((link) => {
@@ -3192,6 +3255,27 @@ function setFilter(filter) {
   scrollQuestionIntoView();
 }
 
+async function setLevel(level) {
+  state.level = level;
+  localStorage.setItem("jlptLevel", level);
+  levelFilters.forEach((item) => item.classList.toggle("active", item.dataset.level === level));
+  if (state.filter.startsWith("exam-")) state.filter = "all";
+  state.index = 0;
+  state.loading = !loadedLevels.has(level);
+  renderQuestion();
+  renderDeck();
+  scrollQuestionIntoView();
+  try {
+    await ensureCurrentLevelLoaded();
+  } catch (error) {
+    state.loading = false;
+    feedback.hidden = false;
+    feedback.textContent = error.message;
+    renderQuestion();
+    renderDeck();
+  }
+}
+
 nextButton.addEventListener("click", () => moveQuestion(1));
 prevButton.addEventListener("click", () => moveQuestion(-1));
 bokiNextButton.addEventListener("click", () => moveBokiQuestion(1));
@@ -3212,14 +3296,14 @@ document.querySelector("#resetProgress").addEventListener("click", () => {
   renderQuestion();
 });
 
+levelFilters.forEach((item) => item.classList.toggle("active", item.dataset.level === state.level));
 renderQuestion();
 renderDeck();
 renderBokiFolders();
 showAppView();
 updateMetrics();
 
-loadHanVietMap()
-  .then(() => loadRemoteExams())
+loadRemoteExams(state.level)
   .then(() => {
     state.loading = false;
     appDataReady = true;
@@ -3227,6 +3311,10 @@ loadHanVietMap()
     renderQuestion();
     renderDeck();
     renderBokiFolders();
+    loadHanVietMap().then(() => {
+      renderQuestion();
+      renderDeck();
+    });
   })
   .catch((error) => {
     state.loading = false;
