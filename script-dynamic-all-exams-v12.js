@@ -121,7 +121,7 @@ function skillFromLabel(label) {
 }
 
 
-const examDataVersion = 7;
+const examDataVersion = 8;
 const n1ExamPeriods = [
   "202607", "202512", "202507", "202412", "202407", "202312", "202307", "202212", "202207",
   "202112", "202107", "202012", "201912", "201907", "201812", "201807", "201712",
@@ -2119,7 +2119,16 @@ function sourceMarkupToHtml(value) {
 function sourceMarkupToText(value) {
   return String(value || "")
     .replace(/\[\[blank\]\]/g, "（　）")
+    .replace(/\[\[\/blank\]\]/g, "")
     .replace(/\[\[br\]\]/g, "\n")
+    .replace(/\[\[table\]\]/g, "\n")
+    .replace(/\[\[\/table\]\]/g, "\n")
+    .replace(/\[\[tr\]\]/g, "\n")
+    .replace(/\[\[\/tr\]\]/g, "")
+    .replace(/\[\[th\]\]/g, " ")
+    .replace(/\[\[\/th\]\]/g, " ")
+    .replace(/\[\[td\]\]/g, " ")
+    .replace(/\[\[\/td\]\]/g, " ")
     .replace(/\[\[[^\]]+\]\]/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -2130,18 +2139,58 @@ function underlinedSourceText(value) {
   return match ? sourceMarkupToText(match[1]) : "";
 }
 
+function hasVisibleBlankText(value) {
+  const text = String(value || "");
+  return text.includes("（　）") || text.includes("（ ）") || text.includes("(　)") || text.includes("( )") || text.includes("（）") || text.includes("()");
+}
+
+function normalizeQuestionSourceText(text, section, instruction = "") {
+  let output = String(text || "")
+    .replace(/\[\[blank\]\]/g, "（　）")
+    .replace(/\[\[\/blank\]\]/g, "");
+  const isFillQuestion = instruction.includes("入れ") || instruction.includes("（") || instruction.includes("( )") || instruction.toLowerCase().includes("điền");
+  if (isFillQuestion && !hasVisibleBlankText(output)) {
+    for (const blank of ["\u00a0", "\u2007", "\u202f"]) {
+      if (output.includes(blank)) return output.replaceAll(blank, "（　）");
+    }
+  }
+  if (section?.type !== "grammar") return output;
+  const isFillGrammar = instruction.includes("問題7") || instruction.includes("入れる") || instruction.toLowerCase().includes("ngữ pháp");
+  const isStarGrammar = instruction.includes("問題8") || instruction.includes("★") || output.includes("★") || output.includes("_★_");
+  const isPassageGrammar = instruction.includes("問題9") || instruction.includes("文章") || instruction.includes("文を読んで");
+  if (!isFillGrammar || isStarGrammar || isPassageGrammar || hasVisibleBlankText(output)) return output;
+  for (const blank of ["\u00a0", "\u2007", "\u202f"]) {
+    if (output.includes(blank)) return output.replaceAll(blank, "（　）");
+  }
+  if (/[ \t　]+\)/u.test(output)) return output.replace(/[ \t　]+\)/u, "（　）");
+  if (/[ \t　]{2,}/u.test(output)) return output.replace(/[ \t　]{2,}/u, "（　）");
+  return `${output}（　）`;
+}
+
+function shouldInheritPassage(section, instruction = "", questionNumber = 0, text = "") {
+  if (section?.type !== "grammar") return false;
+  if (instruction.includes("問題9") || instruction.includes("文章") || instruction.includes("文を読んで") || instruction.toLowerCase().includes("đoạn văn")) return true;
+  if (String(text || "").trim().startsWith("【")) return true;
+  if (instruction.toLowerCase().includes("ngữ pháp")) return (questionNumber >= 48 && questionNumber <= 54) || (questionNumber >= 41 && questionNumber <= 45);
+  return false;
+}
+
 function convertRemoteExam(exam, data) {
   const converted = [];
   data.sections.forEach((section) => {
     section.groups.forEach((group) => {
+      let inheritedPassage = group.passage || "";
       group.questions.forEach((item) => {
         const questionNumber = Number(item.questionNumber || item.id || converted.length + 1);
-        const sourceText = String(item.text || item.prompt || item.question || item.textHtml || "");
-        const promptText = sourceMarkupToText(sourceText) || sourceText.replace(/\[\[blank\]\]/g, "（　）");
-        const htmlSource = item.textHtml || (/\[\[[^\]]+\]\]/.test(sourceText) ? sourceText : "");
+        const rawSource = item.textHtml || item.text || item.prompt || item.question || "";
+        const instruction = group.instruction || "";
+        const normalizedSource = normalizeQuestionSourceText(rawSource, section, instruction);
+        const promptText = sourceMarkupToText(normalizedSource) || sourceMarkupToText(rawSource) || String(rawSource || "").replace(/\[\[blank\]\]/g, "（　）");
+        const htmlSource = item.textHtml || (/\[\[[^\]]+\]\]/u.test(normalizedSource) ? normalizedSource : "");
         const promptMarkup = htmlSource ? `${questionNumber}. ${sourceMarkupToHtml(htmlSource)}` : "";
-        const passageText = item.passage || group.passage || "";
-        const shouldShowPassage = section.type === "reading" || (section.type === "grammar" && passageText) || questionNumber >= 41;
+        const explicitPassage = item.passage || group.passage || "";
+        if (explicitPassage) inheritedPassage = explicitPassage;
+        const passageText = explicitPassage || (shouldInheritPassage(section, instruction, questionNumber, promptText) ? inheritedPassage : "");
         converted.push(q(
           exam.id,
           labelFor(exam, section, questionNumber),
@@ -2149,12 +2198,12 @@ function convertRemoteExam(exam, data) {
           item.options,
           Number(item.correctAnswer) - 1,
           explanationForRemoteQuestion(exam, item, group, section),
-          shouldShowPassage ? passageText : "",
+          passageText,
           promptMarkup,
           {
             examLevel: data.level || exam.level || "N1",
             sectionType: section.type || "",
-            instruction: group.instruction || "",
+            instruction,
             starOrder: item.starOrder || item.correctOrder || item.fullOrder || item.order || "",
             readingTarget: section.type === "reading" ? underlinedSourceText(item.textHtml || item.text || "") : "",
           }
