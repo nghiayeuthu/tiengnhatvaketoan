@@ -42,23 +42,23 @@ function updateExamCountdown() {
   if (!value || !label) return;
   const today = new Date();
   const localToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const examDate = new Date(2026, 6, 5);
+  const examDate = new Date(2026, 11, 6);
   const daysLeft = Math.ceil((examDate - localToday) / 86400000);
 
   if (daysLeft > 0) {
     value.textContent = String(daysLeft);
-    label.textContent = "ngày tới JLPT 5/7";
+    label.textContent = "ngày tới JLPT N1 6/12";
     return;
   }
 
   if (daysLeft === 0) {
     value.textContent = "Hôm nay";
-    label.textContent = "thi JLPT 5/7";
+    label.textContent = "thi JLPT N1 6/12";
     return;
   }
 
   value.textContent = "Đã qua";
-  label.textContent = "JLPT 5/7/2026";
+  label.textContent = "JLPT N1 6/12/2026";
 }
 
 function setupAuthGate() {

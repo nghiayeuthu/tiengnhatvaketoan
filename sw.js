@@ -1,9 +1,9 @@
-const CACHE_NAME = "tiengnhatvaketoan-ipados-v6";
+const CACHE_NAME = "tiengnhatvaketoan-ipados-v7";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css?v=27",
-  "./script-dynamic-all-exams-v12.js?v=86",
+  "./script-dynamic-all-exams-v12.js?v=87",
   "./n1-grammar-extra.js?v=1",
   "./n1-vocabulary-extra.js?v=6",
   "./manifest.webmanifest",
